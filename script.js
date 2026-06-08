@@ -67,6 +67,63 @@ function openForgotPasswordModal(){
 function closeForgotPasswordModal(){
   $('forgotPasswordModal')?.classList.add('hidden');
 }
+function buildResetLink(email){
+  const url = new URL(window.location.href);
+  url.hash = '';
+  url.searchParams.set('reset', '1');
+  url.searchParams.set('email', email);
+  return url.toString();
+}
+function getResetEmailFromUrl(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get('reset') === '1' ? clean(params.get('email') || '').toLowerCase() : '';
+}
+function openResetPasswordModal(email){
+  const modal = $('resetPasswordModal');
+  if(!modal)return;
+  modal.dataset.email = email;
+  modal.classList.remove('hidden');
+  const message = $('resetMessage');
+  if(message){
+    message.textContent = email ? `Restableciendo contraseña para: ${email}` : '';
+    message.className = 'status-message';
+  }
+  setTimeout(() => $('resetPassword')?.focus(), 100);
+}
+function closeResetPasswordModal(){
+  $('resetPasswordModal')?.classList.add('hidden');
+}
+function handleResetLink(){
+  const email = getResetEmailFromUrl();
+  if(!email)return;
+  $('dashboardSection')?.classList.add('hidden');
+  $('authSection')?.classList.remove('hidden');
+  showAuthTab('login');
+  openResetPasswordModal(email);
+}
+async function changePasswordFromResetLink(e){
+  e.preventDefault();
+  const email = ($('resetPasswordModal')?.dataset.email || getResetEmailFromUrl()).toLowerCase();
+  const pass = $('resetPassword')?.value || '';
+  const pass2 = $('resetPasswordConfirm')?.value || '';
+  const message = $('resetMessage');
+  if(!email)return msg(message,'El enlace de recuperación no contiene un correo válido.','error');
+  if(pass.length < 6)return msg(message,'La contraseña debe tener mínimo 6 caracteres.','error');
+  if(pass !== pass2)return msg(message,'Las contraseñas no coinciden.','error');
+  const users = read(DB.users);
+  const index = users.findIndex(u => (u.email || '').toLowerCase() === email);
+  if(index < 0)return msg(message,'No encontramos un usuario con ese correo en este dispositivo.','error');
+  users[index].password_hash = await hashPassword(pass);
+  users[index].updated_at = new Date().toISOString();
+  write(DB.users, users);
+  $('resetForm')?.reset();
+  msg(message,'Contraseña actualizada correctamente. Ya puede iniciar sesión.','success');
+  const cleanUrl = new URL(window.location.href);
+  cleanUrl.searchParams.delete('reset');
+  cleanUrl.searchParams.delete('email');
+  window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+  setTimeout(closeResetPasswordModal, 1500);
+}
 async function sendPasswordRecoveryRequest(e){
   e.preventDefault();
   const inputEl = $('forgotEmail') || $('forgotUserInput');
@@ -79,10 +136,11 @@ async function sendPasswordRecoveryRequest(e){
 
   if(!window.emailjs)return msg(messageEl,'EmailJS no cargó correctamente. Verifique su conexión a internet.','error');
 
-  const link=window.location.href.split('#')[0];
+  const link=buildResetLink(user.email || input);
   const params={
-    to_email: EMAILJS_CONFIG.adminEmail,
-    reply_to: user.email || EMAILJS_CONFIG.adminEmail,
+    to_email: user.email || input,
+    cc_email: EMAILJS_CONFIG.adminEmail,
+    reply_to: EMAILJS_CONFIG.adminEmail,
     email: user.email||'No registrado',
     name: user.name||'Usuario',
     username: user.username||'',
@@ -102,7 +160,7 @@ async function sendPasswordRecoveryRequest(e){
   try{
     emailjs.init({publicKey:EMAILJS_CONFIG.publicKey});
     await emailjs.send(EMAILJS_CONFIG.serviceId,EMAILJS_CONFIG.templateId,params);
-    msg(messageEl,'Solicitud enviada correctamente al administrador.','success');
+    msg(messageEl,'Enlace de recuperación enviado correctamente.','success');
     setTimeout(closeForgotPasswordModal,1800);
   }catch(err){
     console.error('EmailJS error:',err);
@@ -405,7 +463,7 @@ function searchSummaryHtml(data){
     </div>
   </div>`;
 }
-function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
+function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
 $('loginForm')?.addEventListener('submit',async e=>{e.preventDefault(); const id=clean($('loginUser').value).toLowerCase(); const pass=$('loginPassword').value; const user=read(DB.users).find(u=>u.username.toLowerCase()===id||u.email.toLowerCase()===id); if(!user)return msg($('authMessage'),'Usuario no encontrado.','error'); if(user.status!=='Aprobado')return msg($('authMessage'),'Este usuario aún no ha sido aprobado.','error'); if(!await verifyPassword(pass,user.password_hash))return msg($('authMessage'),'Contraseña incorrecta.','error'); loginUser(user);});
 $('registerForm')?.addEventListener('submit',async e=>{e.preventDefault(); const users=read(DB.users); const first=users.length===0; const pass=$('registerPassword').value; const pass2=$('registerPasswordConfirm').value; if(pass!==pass2)return msg($('authMessage'),'Las contraseñas no coinciden.','error'); const username=clean($('registerUsername').value); const email=clean($('registerEmail').value); if(users.some(u=>u.username.toLowerCase()===username.toLowerCase()||u.email.toLowerCase()===email.toLowerCase()))return msg($('authMessage'),'Ya existe un usuario con ese usuario o correo.','error'); const recommender=users.find(u=>u.id===$('registerRecommendedBy')?.value); const user={id:uid(),name:clean($('registerName').value),username,email,phone:clean($('registerPhone').value),role:first?'Administrador':$('registerRole').value,province:PROVINCE,municipio:clean($('registerMunicipio').value),district:clean($('registerDistrict')?.value),zone:clean($('registerZone').value),recommended_by_id:first?'':(recommender?.id||''),recommended_by_name:first?'':(recommender?.name||''),recommended_by_role:first?'':(recommender?.role||''),status:first?'Aprobado':'Pendiente',password_hash:await hashPassword(pass),created_at:new Date().toISOString()}; users.push(user); write(DB.users,users); $('registerForm').reset(); initSelects(); msg($('authMessage'),first?'Administrador creado. Ya puedes iniciar sesión.':'Usuario creado. Debe ser aprobado por el administrador.','success'); showAuthTab('login');});
 $('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=read(DB.voters); const id=$('editingVoterId').value; const ced=clean($('voterCedula').value); const dup=voters.find(v=>v.cedula===ced&&v.id!==id); if(dup)return msg($('voterMessage'),`Esta cédula ya está registrada por ${dup.registered_by_name}.`,'error'); const item={name:clean($('voterName').value),cedula:ced,phone:clean($('voterPhone').value),age:clean($('voterAge').value),address:clean($('voterAddress').value),province:PROVINCE,municipio:clean($('voterMunicipio').value),district:clean($('voterDistrict')?.value),zone:clean($('voterZone').value),recinto:clean($('voterRecinto').value),colegio:clean($('voterColegio').value),observation:clean($('voterObservation').value)}; if(id){const i=voters.findIndex(v=>v.id===id); if(i>-1&&canEditVoter(voters[i]))voters[i]={...voters[i],...item,updated_at:new Date().toISOString()};} else voters.push({id:uid(),...item,registered_by_id:currentUser.id,registered_by_name:currentUser.name,registered_by_role:currentUser.role,created_at:new Date().toISOString()}); write(DB.voters,voters); resetVoterForm(); renderAll(); msg($('voterMessage'),id?'Registro actualizado correctamente.':'Registro guardado correctamente.','success');});
@@ -417,5 +475,5 @@ function migrateData(){
   write(DB.users,users);
   write(DB.voters,voters);
 }
-function boot(){migrateData(); document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light'; initSelects(); bindEvents(); const sid=localStorage.getItem(DB.session); const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado'); if(user)loginUser(user); else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); showAuthTab('login');} if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{}); window.addEventListener('resize',renderChart);}
+function boot(){migrateData(); document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light'; initSelects(); bindEvents(); const sid=localStorage.getItem(DB.session); const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado'); if(user)loginUser(user); else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); showAuthTab('login');} handleResetLink(); if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{}); window.addEventListener('resize',renderChart);}
 document.addEventListener('DOMContentLoaded',boot);

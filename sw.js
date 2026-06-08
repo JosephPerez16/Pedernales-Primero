@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedernales-primero-v2';
+const CACHE_NAME = 'pedernales-primero-v3';
 const APP_SHELL = [
   './',
   './index.html',
