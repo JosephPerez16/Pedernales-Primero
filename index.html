@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pedernales Primero | Gestión Territorial</title>
   <link rel="icon" href="Logos/logo-pedernales.png" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#0B4A86" />
   <meta name="application-name" content="Pedernales Primero" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -51,7 +51,7 @@
       <div class="auth-main-header">
         <div class="auth-brand-pill">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          Plataforma Interna
+          Plataforma Privincial
         </div>
         <h2>Bienvenido al sistema</h2>
         <p>Ingrese sus credenciales para acceder al panel de gestión territorial.</p>
@@ -126,14 +126,26 @@
           </select>
         </div>
 
-        <div class="input-group">
-          <label for="registerMunicipio">Municipio</label>
-          <select id="registerMunicipio" required><option value="">Seleccione</option></select>
+        <div class="grid-2">
+          <div class="input-group">
+            <label for="registerMunicipio">Municipio</label>
+            <select id="registerMunicipio" required><option value="">Seleccione</option></select>
+          </div>
+          <div class="input-group">
+            <label for="registerDistrict">Distrito municipal</label>
+            <select id="registerDistrict" required><option value="">Seleccione</option></select>
+          </div>
         </div>
 
-        <div class="input-group">
-          <label for="registerZone">Zona o demarcación</label>
-          <input type="text" id="registerZone" placeholder="Zona asignada" required />
+        <div class="grid-2">
+          <div class="input-group">
+            <label for="registerZone">Zona o demarcación</label>
+            <input type="text" id="registerZone" placeholder="Zona asignada" required />
+          </div>
+          <div class="input-group">
+            <label for="registerRecommendedBy">Recomendado por</label>
+            <select id="registerRecommendedBy"><option value="">Sin recomendador</option></select>
+          </div>
         </div>
 
         <div class="grid-2">
@@ -158,16 +170,15 @@
       <div class="status-message" id="authMessage" role="alert" aria-live="polite"></div>
 
     </div>
+</div>
 
-    <footer class="auth-footer">
+  <footer class="auth-footer">
       <div class="auth-footer-secure">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Acceso seguro · Datos protegidos
       </div>
       <span class="auth-footer-copy">© 2026 Pedernales Primero</span>
     </footer>
-  </div>
-
 </section>
 
 <div class="app-shell hidden" id="dashboardSection">
@@ -207,20 +218,11 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span class="nav-label">Consulta</span>
         </button>
-      </div>
+      <button class="nav-item" data-panel="usuarios" type="button">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+<span class="nav-label">Usuarios del Sistema</span></button></div>
 
       
-      <div class="nav-group-header open" data-target="navGroupAdmin" role="button" tabindex="0" aria-expanded="true">
-        <span>Administración</span>
-        <svg class="nav-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="nav-group" id="navGroupAdmin">
-        <button class="nav-item" data-panel="usuarios" type="button" id="manageUsersBtn">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span class="nav-label">Usuarios</span>
-        </button>
-        </div>
-
     </nav>
 
     <div class="sidebar-footer">
@@ -251,7 +253,7 @@
 
       <div class="topbar-search" role="search">
         <svg class="topbar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" id="topbarSearchInput" placeholder="Buscar registros, usuarios o zonas…" aria-label="Búsqueda global" />
+        <input type="search" id="topbarSearchInput" placeholder="Buscar registros, colegios o zonas…" aria-label="Búsqueda global" />
       </div>
 
       <div class="topbar-actions">
@@ -278,52 +280,45 @@
 
       
       <section class="content-panel" id="panelOverview">
-        
-        <section class="stats-grid" aria-label="Métricas principales">
-          <article class="stat-card">
-            <div class="stat-card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <span>Total de registros visibles</span>
-            <h3 id="totalVoters">0</h3>
-            <div class="stat-card-delta">Según nivel de acceso</div>
-          </article>
+        <div class="pp-page-head">
+          <span class="pp-kicker">PEDERNALES PRIMERO · PANEL INTERNO</span>
+          <h1>Resumen general de Pedernales</h1>
+          <p>Estadísticas y métricas del sistema territorial.</p>
+        </div>
 
-          <article class="stat-card">
-            <div class="stat-card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
-            </div>
-            <span id="statUsersLabel">Usuarios visibles</span>
-            <h3 id="totalUsers">0</h3>
-            <div class="stat-card-delta" id="statUsersDelta">Según permisos del rol</div>
+        <section class="pp-kpi-grid" aria-label="Indicadores principales">
+          <article class="pp-kpi-card kpi-blue">
+            <div class="pp-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <span>Total de registros</span>
+            <strong id="totalVoters">0</strong>
+            <small>Según nivel de acceso</small>
           </article>
-
-          <article class="stat-card">
-            <div class="stat-card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
+          <article class="pp-kpi-card kpi-sky">
+            <div class="pp-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/><path d="M17 11h4"/><path d="M19 9v4"/></svg></div>
+            <span>Usuarios del sistema</span>
+            <strong id="totalUsers">0</strong>
+            <small>Según permisos del rol</small>
+          </article>
+          <article class="pp-kpi-card kpi-red">
+            <div class="pp-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></div>
             <span>Registros del día</span>
-            <h3 id="todayVoters">0</h3>
-            <div class="stat-card-delta">Últimas 24 horas</div>
+            <strong id="todayVoters">0</strong>
+            <small>Últimas 24 horas</small>
           </article>
-
-          <article class="stat-card">
-            <div class="stat-card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-            </div>
-            <span>Municipios activos</span>
-            <h3 id="activeProvinces">0</h3>
-            <div class="stat-card-delta">Pedernales y Oviedo</div>
+          <article class="pp-kpi-card kpi-gold">
+            <div class="pp-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <span>Demarcaciones activas</span>
+            <strong id="activeProvinces">0</strong>
+            <small>Con registros activos</small>
           </article>
         </section>
-
         
         <section class="analytics-grid" aria-label="Análisis territorial">
           <div class="card chart-card">
             <div class="card-header row-between">
               <div>
-                <h3>Registros por municipio</h3>
-                <p>Resumen visual de Pedernales y Oviedo.</p>
+                <h3>Registros por demarcación</h3>
+                <p>Resumen visual de municipios y distritos municipales.</p>
               </div>
               <span class="badge" id="chartSummaryBadge">0 municipios activos</span>
             </div>
@@ -335,7 +330,7 @@
           <div class="card ranking-card">
             <div class="card-header">
               <h3>Ranking territorial</h3>
-              <p>Municipios con mayor cantidad de registros visibles.</p>
+              <p>Demarcaciones con mayor cantidad de registros visibles.</p>
             </div>
             <div class="ranking-list" id="provinceRanking" role="list"></div>
           </div>
@@ -351,7 +346,7 @@
           </div>
         </div>
 
-        <div class="main-grid">
+        <div class="main-grid registro-grid-solo">
           
           <div class="card form-card">
             <div class="card-header">
@@ -370,7 +365,7 @@
               <div class="grid-2">
                 <div class="input-group">
                   <label for="voterName">Nombre completo</label>
-                  <input type="text" id="voterName" required autocomplete="off" />
+                  <input type="text" id="voterName" placeholder="Nombre y Apellido" required autocomplete="off" />
                 </div>
                 <div class="input-group">
                   <label for="voterCedula">Cédula</label>
@@ -397,16 +392,22 @@
 
               <div class="grid-3">
                 <div class="input-group">
+                  <label for="voterDistrict">Distrito municipal</label>
+                  <select id="voterDistrict" required>
+                    <option value="">Seleccione</option>
+                  </select>
+                </div>
+                <div class="input-group">
                   <label for="voterZone">Zona</label>
                   <input type="text" id="voterZone" required placeholder="Ej. Zona 1" />
                 </div>
                 <div class="input-group">
                   <label for="voterRecinto">Recinto</label>
-                  <input type="text" id="voterRecinto" required />
+                  <input type="text" id="voterRecinto" required placeholder="Escuela"  />
                 </div>
                 <div class="input-group">
-                  <label for="voterColegio">Colegio Electoral</label>
-                  <input type="text" id="voterColegio" required />
+                  <label for="voterColegio">Mesa Electoral</label>
+                  <input type="text" id="voterColegio" required placeholder="Numero de Mesa" />
                 </div>
               </div>
 
@@ -429,57 +430,57 @@
           </div>
 
           
-          <div class="card search-card" id="consultaQuickCard">
-            <div class="card-header">
-              <h3>Consulta rápida</h3>
-              <p>Filtre por nombre, cédula, registrador, rol o territorio.</p>
-            </div>
-
-            <div class="input-group">
-              <label for="searchInput">Búsqueda general</label>
-              <input type="search" id="searchInput" placeholder="Nombre, cédula, teléfono, recinto, zona…" />
-            </div>
-
-            <div class="input-group">
-              <label for="filterMunicipio">Municipio</label>
-              <select id="filterMunicipio"><option value="">Todos</option></select>
-            </div>
-
-            <div class="grid-2 compact-grid">
-              <div class="input-group">
-                <label for="filterSector">Zona</label>
-                <select id="filterSector"><option value="">Todas</option></select>
-              </div>
-              <div class="input-group">
-                <label for="filterMesa">Recinto</label>
-                <select id="filterMesa"><option value="">Todos</option></select>
-              </div>
-            </div>
-
-            <div class="grid-2 compact-grid">
-              <div class="input-group">
-                <label for="filterRole">Rol registrador</label>
-                <select id="filterRole"><option value="">Todos</option></select>
-              </div>
-              <div class="input-group">
-                <label for="filterRegistrar">Registrador</label>
-                <select id="filterRegistrar"><option value="">Todos</option></select>
-              </div>
-            </div>
-
-            <button class="clear-btn" id="clearFiltersBtn" type="button" style="margin-top: 8px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              Limpiar filtros
-            </button>
-
-            <div class="search-results" id="searchResults" role="list" aria-live="polite" aria-label="Resultados de búsqueda"></div>
-          </div>
         </div>
       </section>
 
       
       <section class="content-panel" id="panelConsulta">
-        <div class="card table-card">
+        <div class="card pp-search-card" id="consultaAdvancedCard">
+          <div class="pp-search-head">
+            <div>
+              <h3>Buscar registros</h3>
+              <p>Filtre por nombre, cédula, municipio, registrador y más.</p>
+            </div>
+            <span class="badge" id="filteredCountBadgeTop">0 resultados</span>
+          </div>
+          <div class="pp-filter-grid">
+            <div class="input-group pp-filter-full">
+              <label for="searchInput">Búsqueda general</label>
+              <input type="search" id="searchInput" placeholder="Nombre, cédula, teléfono, recinto..." autocomplete="off" />
+            </div>
+            <div class="input-group">
+              <label for="filterMunicipio">Municipio</label>
+              <select id="filterMunicipio"></select>
+            </div>
+            <div class="input-group">
+              <label for="filterDistrict">Distrito municipal</label>
+              <select id="filterDistrict"></select>
+            </div>
+            <div class="input-group">
+              <label for="filterSector">Zona</label>
+              <select id="filterSector"></select>
+            </div>
+            <div class="input-group">
+              <label for="filterMesa">Recinto</label>
+              <select id="filterMesa"></select>
+            </div>
+            <div class="input-group">
+              <label for="filterColegio">Colegio electoral</label>
+              <select id="filterColegio"></select>
+            </div>
+            <div class="input-group">
+              <label for="filterRole">Rol registrador</label>
+              <select id="filterRole"></select>
+            </div>
+            <div class="input-group">
+              <label for="filterRegistrar">Registrador</label>
+              <select id="filterRegistrar"></select>
+            </div>
+            <button type="button" class="pp-clear-btn" id="clearFiltersBtn">× Limpiar filtros</button>
+          </div>
+        </div>
+        <div id="searchResults"></div>
+        <div class="card table-card consulta-table-card">
           <div class="card-header row-between">
             <div>
               <h3>Registros visibles</h3>
@@ -500,6 +501,7 @@
                   <th scope="col">Edad</th>
                   <th scope="col">Dirección</th>
                   <th scope="col">Municipio</th>
+                  <th scope="col">Distrito municipal</th>
                   <th scope="col">Zona</th>
                   <th scope="col">Recinto</th>
                   <th scope="col">Colegio Electoral</th>
@@ -517,13 +519,25 @@
       </section>
 
       
-      <section class="card users-card section-hidden" id="usersSection">
-        <div class="card-header row-between">
+      <section class="content-panel card users-card section-hidden" id="usersSection">
+        <div class="pp-users-head">
           <div>
             <h3>Usuarios del sistema</h3>
             <p>Gestión interna de accesos y perfiles autorizados.</p>
           </div>
-          <span class="soft-note" id="userPermissionsNote">Visualización según permisos</span>
+          <div class="pp-users-actions">
+            <span class="pp-users-count" id="usersTotalBadge">0 usuarios</span>
+            <span class="badge" id="usersApprovedBadge">0 aprobados</span>
+            <button type="button" class="secondary-btn" id="refreshUsersBtn">↻ Actualizar</button>
+          </div>
+        </div>
+        <div class="pp-users-toolbar">
+          <div class="pp-users-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="userSearchInput" placeholder="Buscar por nombre, usuario, correo, zona..." autocomplete="off" />
+          </div>
+          <select id="userRoleFilter" aria-label="Filtrar por rol"><option value="">Todos los roles</option></select>
+          <select id="userStatusFilter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option>Aprobado</option><option>Pendiente</option></select>
         </div>
 
         <div class="table-wrap table-wrap-fixed">
@@ -536,7 +550,9 @@
                 <th scope="col">Rol</th>
                 <th scope="col">Teléfono</th>
                 <th scope="col">Municipio</th>
+                <th scope="col">Distrito municipal</th>
                 <th scope="col">Zona</th>
+                <th scope="col">Recomendado por</th>
                 <th scope="col">Estado</th>
                 <th scope="col">Acciones</th>
               </tr>
@@ -548,6 +564,20 @@
 
       
       </main>
+
+      <footer class="site-footer" role="contentinfo">
+        <div class="footer-topband"></div>
+        <div class="footer-bottom">
+          <div class="footer-bottom-inner">
+            <div class="footer-brand-simple">
+              <img src="Logos/logo-pedernales.png" alt="Pedernales Primero" class="footer-org-logo" />
+              <span>Pedernales Primero</span>
+            </div>
+            <span class="footer-copyright">© 2026 Pedernales Primero · Provincia de Pedernales</span>
+            <span class="footer-founder">Gestión territorial · <em>Pedernales</em></span>
+          </div>
+        </div>
+      </footer>
   </div>
 </div>
 
@@ -593,14 +623,26 @@
         </select>
       </div>
 
-      <div class="input-group" style="margin-top:14px">
-        <label for="editUserMunicipio">Municipio</label>
-        <select id="editUserMunicipio" required><option value="">Seleccione</option></select>
+      <div class="grid-2" style="margin-top:14px">
+        <div class="input-group">
+          <label for="editUserMunicipio">Municipio</label>
+          <select id="editUserMunicipio" required><option value="">Seleccione</option></select>
+        </div>
+        <div class="input-group">
+          <label for="editUserDistrict">Distrito municipal</label>
+          <select id="editUserDistrict" required><option value="">Seleccione</option></select>
+        </div>
       </div>
 
-      <div class="input-group" style="margin-top:14px">
-        <label for="editUserZone">Zona o demarcación</label>
-        <input type="text" id="editUserZone" placeholder="Zona asignada" required />
+      <div class="grid-2" style="margin-top:14px">
+        <div class="input-group">
+          <label for="editUserZone">Zona o demarcación</label>
+          <input type="text" id="editUserZone" placeholder="Zona asignada" required />
+        </div>
+        <div class="input-group">
+          <label for="editUserRecommendedBy">Recomendado por</label>
+          <select id="editUserRecommendedBy"><option value="">Sin recomendador</option></select>
+        </div>
       </div>
 
       <div class="modal-actions">
@@ -632,7 +674,7 @@
       </div>
       <div class="modal-actions" style="margin-top:18px">
         <button type="button" class="clear-btn" id="cancelForgotBtn">Cancelar</button>
-        <button type="submit" class="primary-btn">
+        <button type="submit" class="primary-btn" id="sendForgotPasswordBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
           Enviar enlace
         </button>
@@ -721,21 +763,8 @@
   </div>
 </div>
 
-<footer class="site-footer" role="contentinfo">
-  <div class="footer-topband"></div>
-  <div class="footer-bottom">
-    <div class="footer-bottom-inner">
-      <div class="footer-brand-simple">
-        <img src="Logos/logo-pedernales.png" alt="Pedernales Primero" class="footer-org-logo" />
-        <span>Pedernales Primero</span>
-      </div>
-      <span class="footer-copyright">© 2026 Pedernales Primero · Provincia de Pedernales</span>
-      <span class="footer-founder">Gestión territorial · <em>Pedernales</em></span>
-    </div>
-  </div>
-</footer>
-
 <script src="pwa.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="script.js" defer></script>
 </body>
 </html>
