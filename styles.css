@@ -3659,3 +3659,24 @@ html[data-theme="dark"] textarea::placeholder{
 [data-theme="dark"] #forgotPasswordModal p{
   color:#CBD5E1!important;
 }
+
+/* Recuperación de contraseña - limpieza final */
+.reset-modal-card{gap:0!important;}
+.reset-account-box{margin:14px 0 4px;padding:11px 14px;border:1px solid rgba(220,38,38,.16);background:rgba(220,38,38,.06);border-radius:14px;color:var(--text-secondary);font-size:.86rem;word-break:break-word;}
+.password-field{position:relative;display:flex;align-items:center;}
+.password-field input{width:100%;padding-right:92px!important;}
+.password-toggle-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:rgba(31,41,55,.08);color:var(--text-secondary);border-radius:999px;padding:7px 10px;font-size:.72rem;font-weight:800;cursor:pointer;}
+.password-toggle-btn:hover{background:rgba(220,38,38,.11);color:var(--gov-red);}
+.password-strength{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px;}
+.password-strength span{height:5px;border-radius:999px;background:rgba(148,163,184,.35);transition:all .2s ease;}
+.password-strength[data-score="1"] span.active{background:#ef4444;}
+.password-strength[data-score="2"] span.active{background:#f59e0b;}
+.password-strength[data-score="3"] span.active{background:#16a34a;}
+.reset-helper{display:block;margin-top:8px;color:var(--text-muted);font-size:.76rem;line-height:1.35;}
+.reset-helper.success{color:#15803d;}
+.reset-helper.error{color:#b91c1c;}
+.reset-actions{display:grid!important;grid-template-columns:1fr 1.35fr;gap:10px;}
+.reset-actions .primary-btn,.reset-actions .clear-btn{width:100%;justify-content:center;}
+[data-theme="dark"] .reset-account-box{background:rgba(220,38,38,.12);border-color:rgba(248,113,113,.25);}
+[data-theme="dark"] .password-toggle-btn{background:rgba(248,250,252,.09);color:#E5E7EB;}
+@media(max-width:520px){.reset-actions{grid-template-columns:1fr!important}.password-field input{padding-right:84px!important}.password-toggle-btn{font-size:.68rem;padding:6px 8px}.reset-modal-card{padding:22px 16px!important}}

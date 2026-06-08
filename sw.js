@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pedernales-primero-v3';
+const CACHE_NAME = 'pedernales-primero-v4';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css',
-  './script.js',
+  './styles.css?v=4',
+  './script.js?v=4',
   './manifest.json',
   './pwa.js',
   './Logos/logo-pedernales.png',

@@ -29,7 +29,7 @@ const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(
 function escapeHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
 function formatCedula(v){const d=digits(v).slice(0,11); if(d.length<=3)return d; if(d.length<=10)return `${d.slice(0,3)}-${d.slice(3)}`; return `${d.slice(0,3)}-${d.slice(3,10)}-${d.slice(10)}`}
 function formatPhone(v){const d=digits(v).slice(0,10); if(d.length<=3)return d; if(d.length<=6)return `${d.slice(0,3)}-${d.slice(3)}`; return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`}
-function msg(el, text, type='success'){ if(!el)return; el.textContent=text; el.className=`status-message ${type}`; setTimeout(()=>{el.textContent=''; el.className='status-message'},3600)}
+function msg(el, text, type='success'){ if(!el)return; el.textContent=text; el.className=`status-message ${type} show`; setTimeout(()=>{el.textContent=''; el.className='status-message'},4200)}
 function fillSelect(el, values, label){ if(!el)return; const old=el.value; el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join(''); if(values.includes(old))el.value=old; }
 function isAdmin(){return currentUser?.role==='Administrador'}
 function isGeneral(){return currentUser?.role==='Coordinador General'}
@@ -83,15 +83,54 @@ function openResetPasswordModal(email){
   if(!modal)return;
   modal.dataset.email = email;
   modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  const accountBox = $('resetAccountBox');
+  if(accountBox) accountBox.innerHTML = email ? `<strong>Cuenta:</strong> ${escapeHtml(email)}` : '';
   const message = $('resetMessage');
   if(message){
-    message.textContent = email ? `Restableciendo contraseña para: ${email}` : '';
+    message.textContent = '';
     message.className = 'status-message';
   }
+  updateResetPasswordUi();
   setTimeout(() => $('resetPassword')?.focus(), 100);
 }
 function closeResetPasswordModal(){
   $('resetPasswordModal')?.classList.add('hidden');
+  $('resetForm')?.reset();
+  updateResetPasswordUi();
+  if(!$('forgotPasswordModal') || $('forgotPasswordModal')?.classList.contains('hidden')) document.body.classList.remove('modal-open');
+  const cleanUrl = new URL(window.location.href);
+  cleanUrl.searchParams.delete('reset');
+  cleanUrl.searchParams.delete('email');
+  if(window.location.search.includes('reset=')) window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+}
+function passwordScore(value){
+  let score = 0;
+  if(value.length >= 6) score++;
+  if(/[A-ZÁÉÍÓÚÑ]/.test(value) && /[a-záéíóúñ]/.test(value)) score++;
+  if(/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
+  return Math.min(score, 3);
+}
+function updateResetPasswordUi(){
+  const pass = $('resetPassword')?.value || '';
+  const pass2 = $('resetPasswordConfirm')?.value || '';
+  const strength = $('resetPasswordStrength');
+  if(strength){
+    const score = passwordScore(pass);
+    strength.dataset.score = String(score);
+    [...strength.children].forEach((bar, i)=>bar.classList.toggle('active', i < score));
+  }
+  const hint = $('resetPasswordHint');
+  if(hint){
+    hint.textContent = pass.length ? (pass.length < 6 ? 'La contraseña aún es muy corta.' : (passwordScore(pass) >= 3 ? 'Contraseña fuerte.' : 'Contraseña válida, puede mejorar agregando números o símbolos.')) : 'Use mínimo 6 caracteres. Recomendado: letras, números y símbolos.';
+    hint.className = `reset-helper ${pass.length && pass.length < 6 ? 'error' : pass.length >= 6 ? 'success' : ''}`;
+  }
+  const match = $('resetPasswordMatch');
+  if(match){
+    const ok = pass && pass2 && pass === pass2;
+    match.textContent = !pass2 ? 'Las contraseñas deben coincidir.' : ok ? 'Las contraseñas coinciden.' : 'Las contraseñas no coinciden.';
+    match.className = `reset-helper ${!pass2 ? '' : ok ? 'success' : 'error'}`;
+  }
 }
 function handleResetLink(){
   const email = getResetEmailFromUrl();
@@ -463,7 +502,7 @@ function searchSummaryHtml(data){
     </div>
   </div>`;
 }
-function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
+function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('closeResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('cancelResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('resetPasswordModal')?.addEventListener('click',e=>{if(e.target===$('resetPasswordModal'))closeResetPasswordModal();}); ['resetPassword','resetPasswordConfirm'].forEach(id=>$(id)?.addEventListener('input',updateResetPasswordUi)); document.querySelectorAll('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=$(btn.dataset.togglePassword); if(!input)return; const visible=input.type==='text'; input.type=visible?'password':'text'; btn.textContent=visible?'Mostrar':'Ocultar'; btn.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');})); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('resetPasswordModal')?.classList.contains('hidden'))closeResetPasswordModal();}); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
 $('loginForm')?.addEventListener('submit',async e=>{e.preventDefault(); const id=clean($('loginUser').value).toLowerCase(); const pass=$('loginPassword').value; const user=read(DB.users).find(u=>u.username.toLowerCase()===id||u.email.toLowerCase()===id); if(!user)return msg($('authMessage'),'Usuario no encontrado.','error'); if(user.status!=='Aprobado')return msg($('authMessage'),'Este usuario aún no ha sido aprobado.','error'); if(!await verifyPassword(pass,user.password_hash))return msg($('authMessage'),'Contraseña incorrecta.','error'); loginUser(user);});
 $('registerForm')?.addEventListener('submit',async e=>{e.preventDefault(); const users=read(DB.users); const first=users.length===0; const pass=$('registerPassword').value; const pass2=$('registerPasswordConfirm').value; if(pass!==pass2)return msg($('authMessage'),'Las contraseñas no coinciden.','error'); const username=clean($('registerUsername').value); const email=clean($('registerEmail').value); if(users.some(u=>u.username.toLowerCase()===username.toLowerCase()||u.email.toLowerCase()===email.toLowerCase()))return msg($('authMessage'),'Ya existe un usuario con ese usuario o correo.','error'); const recommender=users.find(u=>u.id===$('registerRecommendedBy')?.value); const user={id:uid(),name:clean($('registerName').value),username,email,phone:clean($('registerPhone').value),role:first?'Administrador':$('registerRole').value,province:PROVINCE,municipio:clean($('registerMunicipio').value),district:clean($('registerDistrict')?.value),zone:clean($('registerZone').value),recommended_by_id:first?'':(recommender?.id||''),recommended_by_name:first?'':(recommender?.name||''),recommended_by_role:first?'':(recommender?.role||''),status:first?'Aprobado':'Pendiente',password_hash:await hashPassword(pass),created_at:new Date().toISOString()}; users.push(user); write(DB.users,users); $('registerForm').reset(); initSelects(); msg($('authMessage'),first?'Administrador creado. Ya puedes iniciar sesión.':'Usuario creado. Debe ser aprobado por el administrador.','success'); showAuthTab('login');});
 $('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=read(DB.voters); const id=$('editingVoterId').value; const ced=clean($('voterCedula').value); const dup=voters.find(v=>v.cedula===ced&&v.id!==id); if(dup)return msg($('voterMessage'),`Esta cédula ya está registrada por ${dup.registered_by_name}.`,'error'); const item={name:clean($('voterName').value),cedula:ced,phone:clean($('voterPhone').value),age:clean($('voterAge').value),address:clean($('voterAddress').value),province:PROVINCE,municipio:clean($('voterMunicipio').value),district:clean($('voterDistrict')?.value),zone:clean($('voterZone').value),recinto:clean($('voterRecinto').value),colegio:clean($('voterColegio').value),observation:clean($('voterObservation').value)}; if(id){const i=voters.findIndex(v=>v.id===id); if(i>-1&&canEditVoter(voters[i]))voters[i]={...voters[i],...item,updated_at:new Date().toISOString()};} else voters.push({id:uid(),...item,registered_by_id:currentUser.id,registered_by_name:currentUser.name,registered_by_role:currentUser.role,created_at:new Date().toISOString()}); write(DB.voters,voters); resetVoterForm(); renderAll(); msg($('voterMessage'),id?'Registro actualizado correctamente.':'Registro guardado correctamente.','success');});
