@@ -2,7 +2,8 @@ const DB = {
   users: 'pedernales_primero_users_v1',
   voters: 'pedernales_primero_records_v1',
   session: 'pedernales_primero_session_v1',
-  theme: 'pedernales_primero_theme_v1'
+  theme: 'pedernales_primero_theme_v1',
+  audit: 'pedernales_primero_audit_v1'
 };
 const ROLES = ['Administrador', 'Coordinador General', 'Coordinador de Zona', 'Registrador'];
 const MUNICIPIOS = ['Pedernales', 'Oviedo'];
@@ -36,14 +37,130 @@ function isGeneral(){return currentUser?.role==='Coordinador General'}
 function isZone(){return currentUser?.role==='Coordinador de Zona'}
 function isRegistrar(){return currentUser?.role==='Registrador'}
 function canManageUsers(){return isAdmin()}
+function canViewAudit(){return isAdmin()}
+function auditLabel(action){return String(action||'').replaceAll('_',' ')}
+function auditType(action){
+  const a=String(action||'').toLowerCase();
+  if(a.includes('sesión')||a.includes('login')||a.includes('salida')||a.includes('entrada')||a.includes('fallido'))return 'Acceso';
+  if(a.includes('descarga')||a.includes('export'))return 'Descarga';
+  if(a.includes('edit')||a.includes('actualiz')||a.includes('cread')||a.includes('elimin')||a.includes('aprob'))return 'Cambio';
+  return 'General';
+}
+function addAudit(action,module,detail='',actor=null){
+  const u=actor||currentUser;
+  const logs=read(DB.audit);
+  logs.unshift({id:uid(),created_at:new Date().toISOString(),user_id:u?.id||'',user_name:u?.name||'Sistema',user_role:u?.role||'',username:u?.username||'',action,kind:auditType(action),module,detail:String(detail||''),agent:navigator.userAgent});
+  write(DB.audit,logs.slice(0,1500));
+}
+function filteredAudit(){
+  const q=clean($('auditSearchInput')?.value).toLowerCase();
+  const action=$('auditActionFilter')?.value||'';
+  return read(DB.audit).filter(a=>{
+    const hay=[a.user_name,a.username,a.user_role,a.action,a.kind,a.module,a.detail,new Date(a.created_at).toLocaleString('es-DO')].join(' ').toLowerCase();
+    return (!q||hay.includes(q))&&(!action||a.action===action);
+  });
+}
+function renderAudit(){
+  const section=$('auditSection');
+  if(!section)return;
+  if(!canViewAudit()){
+    section.classList.add('section-hidden');
+    $('auditNavBtn')?.classList.add('section-hidden');
+    return;
+  }
+  $('auditNavBtn')?.classList.remove('section-hidden');
+  const logs=read(DB.audit);
+  const actions=[...new Set(logs.map(a=>a.action).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  const select=$('auditActionFilter');
+  if(select){
+    const old=select.value;
+    select.innerHTML='<option value="">Todas las acciones</option>'+actions.map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(auditLabel(a))}</option>`).join('');
+    if(actions.includes(old))select.value=old;
+  }
+  const data=filteredAudit();
+  const today=new Date().toDateString();
+  $('auditTotalBadge') && ($('auditTotalBadge').textContent=`${logs.length} eventos`);
+  $('auditTodayCount') && ($('auditTodayCount').textContent=logs.filter(a=>new Date(a.created_at).toDateString()===today).length);
+  $('auditAccessCount') && ($('auditAccessCount').textContent=logs.filter(a=>a.kind==='Acceso').length);
+  $('auditChangesCount') && ($('auditChangesCount').textContent=logs.filter(a=>a.kind==='Cambio').length);
+  $('auditExportCount') && ($('auditExportCount').textContent=logs.filter(a=>a.kind==='Descarga').length);
+  const tbody=$('auditTableBody');
+  if(!tbody)return;
+  tbody.innerHTML=data.length?data.map(a=>`<tr>
+    <td data-label="Fecha">${new Date(a.created_at).toLocaleString('es-DO')}</td>
+    <td data-label="Usuario"><strong>${escapeHtml(a.user_name)}</strong><small>${escapeHtml(a.username||'')}</small></td>
+    <td data-label="Rol"><span class="badge">${escapeHtml(a.user_role||'Sistema')}</span></td>
+    <td data-label="Acción"><span class="audit-pill">${escapeHtml(auditLabel(a.action))}</span></td>
+    <td data-label="Módulo">${escapeHtml(a.module)}</td>
+    <td data-label="Detalle">${escapeHtml(a.detail)}</td>
+  </tr>`).join(''):`<tr><td colspan="6" class="empty-cell">No hay eventos de auditoría registrados.</td></tr>`;
+}
+function exportAudit(){
+  if(!canViewAudit())return;
+  const data=filteredAudit();
+  if(!data.length)return alert('No hay eventos de auditoría para exportar.');
+  addAudit('Descarga de auditoría','Auditoría',`${data.length} eventos exportados`);
+  const rows=data.map(a=>({Fecha:new Date(a.created_at).toLocaleString('es-DO'),Usuario:a.user_name,UsuarioSistema:a.username,Rol:a.user_role,Accion:auditLabel(a.action),Tipo:a.kind,Modulo:a.module,Detalle:a.detail}));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:22},{wch:28},{wch:18},{wch:22},{wch:26},{wch:14},{wch:18},{wch:60}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Auditoria');
+  XLSX.writeFile(wb,`Auditoria_Pedernales_Primero_${new Date().toISOString().slice(0,10)}.xlsx`);
+  renderAudit();
+}
 function same(a,b){return clean(a).toLowerCase()===clean(b).toLowerCase()}
 function recommendedUserIds(){return read(DB.users).filter(u=>u.recommended_by_id===currentUser?.id).map(u=>u.id)}
 function visibleVoters(){const all=read(DB.voters); if(!currentUser)return[]; if(isAdmin()||isGeneral())return all; const recIds=recommendedUserIds(); if(isRegistrar())return all.filter(v=>v.registered_by_id===currentUser.id); return all.filter(v=>v.registered_by_id===currentUser.id||recIds.includes(v.registered_by_id)||(isZone()&&currentUser.zone&&same(v.zone,currentUser.zone)));}
 function canEditVoter(v){return isAdmin()||isGeneral()||v.registered_by_id===currentUser?.id||(isZone()&&currentUser?.zone&&same(v.zone,currentUser.zone));}
 function visibleUsers(){const users=read(DB.users); if(isAdmin())return users; if(isGeneral())return users.filter(u=>u.role!=='Administrador'); const recIds=recommendedUserIds(); return users.filter(u=>u.id===currentUser?.id||recIds.includes(u.id));}
-function setPanel(panel){document.querySelectorAll('.content-panel').forEach(p=>p.classList.add('section-hidden')); const map={overview:'panelOverview',registro:'panelRegistro',consulta:'panelConsulta',usuarios:'usersSection'}; const target=$(map[panel]||'panelOverview'); if(target)target.classList.remove('section-hidden'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.panel===panel)); closeSidebar(); renderAll();}
-function openSidebar(){ $('appSidebar')?.classList.add('open'); $('sidebarOverlay')?.classList.add('show'); $('sidebarToggleBtn')?.setAttribute('aria-expanded','true'); $('sidebarToggleBtn')?.classList.add('active'); }
-function closeSidebar(){ $('appSidebar')?.classList.remove('open'); $('sidebarOverlay')?.classList.remove('show'); $('sidebarToggleBtn')?.setAttribute('aria-expanded','false'); $('sidebarToggleBtn')?.classList.remove('active'); }
+function setPanel(panel){if(panel==='usuarios'&&!canManageUsers())panel='overview'; if(panel==='auditoria'&&!canViewAudit())panel='overview'; document.querySelectorAll('.content-panel').forEach(p=>p.classList.add('section-hidden')); const map={overview:'panelOverview',registro:'panelRegistro',consulta:'panelConsulta',usuarios:'usersSection',auditoria:'auditSection'}; const target=$(map[panel]||'panelOverview'); if(target)target.classList.remove('section-hidden'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.panel===panel)); closeSidebar(); renderAll();}
+let __ppSidebarScrollY = 0;
+function openSidebar(){
+  const mainScroll = document.querySelector('.app-main');
+  __ppSidebarScrollY = mainScroll?.scrollTop || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  if(mainScroll) mainScroll.dataset.savedScroll = String(__ppSidebarScrollY);
+  const sidebar = $('appSidebar');
+  const overlay = $('sidebarOverlay');
+  sidebar?.classList.add('open');
+  overlay?.classList.add('show');
+  overlay?.classList.add('visible');
+  document.body.classList.add('sidebar-open');
+  document.documentElement.classList.add('sidebar-open-html');
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${__ppSidebarScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+  $('sidebarToggleBtn')?.setAttribute('aria-expanded','true');
+  $('sidebarToggleBtn')?.classList.add('active');
+}
+function closeSidebar(){
+  const mainScroll = document.querySelector('.app-main');
+  const savedY = Number(mainScroll?.dataset.savedScroll || __ppSidebarScrollY || Math.abs(parseInt(document.body.style.top || '0', 10)) || 0);
+  $('appSidebar')?.classList.remove('open');
+  $('sidebarOverlay')?.classList.remove('show');
+  $('sidebarOverlay')?.classList.remove('visible');
+  document.body.classList.remove('sidebar-open');
+  document.documentElement.classList.remove('sidebar-open-html');
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  $('sidebarToggleBtn')?.setAttribute('aria-expanded','false');
+  $('sidebarToggleBtn')?.classList.remove('active');
+  requestAnimationFrame(() => {
+    if(mainScroll){
+      mainScroll.scrollTop = savedY;
+      delete mainScroll.dataset.savedScroll;
+    }
+    window.scrollTo(0, savedY);
+  });
+}
 function approvedUsers(){return read(DB.users).filter(u=>u.status==='Aprobado')}
 function fillRecommendedSelect(el, selected=''){if(!el)return; const users=approvedUsers(); el.innerHTML='<option value="">Sin recomendador</option>'+users.map(u=>`<option value="${u.id}">${escapeHtml(u.name)} · ${escapeHtml(u.role)}</option>`).join(''); if([...el.options].some(o=>o.value===selected))el.value=selected;}
 function districtValues(m=''){return m&&DISTRITOS[m]?DISTRITOS[m]:DEMARCACIONES}
@@ -155,6 +272,7 @@ async function changePasswordFromResetLink(e){
   users[index].password_hash = await hashPassword(pass);
   users[index].updated_at = new Date().toISOString();
   write(DB.users, users);
+  addAudit('Contraseña restablecida','Seguridad',`Contraseña actualizada para ${email}`,users[index]);
   $('resetForm')?.reset();
   msg(message,'Contraseña actualizada correctamente. Ya puede iniciar sesión.','success');
   const cleanUrl = new URL(window.location.href);
@@ -199,11 +317,23 @@ async function sendPasswordRecoveryRequest(e){
   try{
     emailjs.init({publicKey:EMAILJS_CONFIG.publicKey});
     await emailjs.send(EMAILJS_CONFIG.serviceId,EMAILJS_CONFIG.templateId,params);
+    addAudit(
+      'Recuperación solicitada',
+      'Seguridad',
+      `Solicitud enviada a ${user.email || input}`,
+      {
+        id: user.id || '',
+        name: user.name || 'Usuario',
+        role: user.role || 'Recuperación',
+        username: user.username || user.email || input
+      }
+    );
     msg(messageEl,'Enlace de recuperación enviado correctamente.','success');
     setTimeout(closeForgotPasswordModal,1800);
   }catch(err){
     console.error('EmailJS error:',err);
-    msg(messageEl,'No se pudo enviar la solicitud. Revise la configuración de EmailJS y la plantilla.','error');
+    const reason = err?.text || err?.message || '';
+    msg(messageEl,`No se pudo enviar la solicitud. Revise EmailJS, el servicio y la plantilla.${reason ? ' Detalle: ' + reason : ''}`,'error');
   }finally{
     if(btn){btn.disabled=false; btn.textContent=originalText;}
   }
@@ -212,11 +342,11 @@ async function sendPasswordRecoveryRequest(e){
 function showAuthTab(type){$('loginForm')?.classList.toggle('active',type==='login'); $('registerForm')?.classList.toggle('active',type==='register'); $('showLogin')?.classList.toggle('active',type==='login'); $('showRegister')?.classList.toggle('active',type==='register'); firstAdminMode();}
 async function hashPassword(p){return btoa(unescape(encodeURIComponent(p)))}
 async function verifyPassword(p,h){return await hashPassword(p)===h}
-function loginUser(user){currentUser=user; localStorage.setItem(DB.session,user.id); $('authSection')?.classList.add('hidden'); $('dashboardSection')?.classList.remove('hidden'); $('manageUsersBtn')?.classList.toggle('section-hidden',!canManageUsers()); const initials=(user.name||'U').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(); if($('sidebarAvatar'))$('sidebarAvatar').textContent=initials; if($('sidebarUserName'))$('sidebarUserName').textContent=user.name; if($('sidebarUserRole'))$('sidebarUserRole').textContent=user.role; if($('currentUserInfo'))$('currentUserInfo').textContent=`${user.name} · ${user.role}`; resetVoterForm(); setPanel('overview');}
-function logout(){currentUser=null; localStorage.removeItem(DB.session); $('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); showAuthTab('login');}
+function loginUser(user){currentUser=user; localStorage.setItem(DB.session,user.id); $('authSection')?.classList.add('hidden'); $('dashboardSection')?.classList.remove('hidden'); $('manageUsersBtn')?.classList.toggle('section-hidden',!canManageUsers()); $('auditNavBtn')?.classList.toggle('section-hidden',!canViewAudit()); const initials=(user.name||'U').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(); if($('sidebarAvatar'))$('sidebarAvatar').textContent=initials; if($('sidebarUserName'))$('sidebarUserName').textContent=user.name; if($('sidebarUserRole'))$('sidebarUserRole').textContent=user.role; if($('currentUserInfo'))$('currentUserInfo').textContent=`${user.name} · ${user.role}`; addAudit('Entrada al sistema','Sesión','Inicio de sesión correcto',user); resetVoterForm(); setPanel('overview');}
+function logout(){if(currentUser)addAudit('Salida del sistema','Sesión','Cierre de sesión'); currentUser=null; localStorage.removeItem(DB.session); $('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); $('auditNavBtn')?.classList.add('section-hidden'); showAuthTab('login');}
 function filteredVoters(){const q=clean($('searchInput')?.value).toLowerCase(); const m=$('filterMunicipio')?.value||''; const d=$('filterDistrict')?.value||''; const z=$('filterSector')?.value||''; const rec=$('filterMesa')?.value||''; const col=$('filterColegio')?.value||''; const role=$('filterRole')?.value||''; const reg=$('filterRegistrar')?.value||''; return visibleVoters().filter(v=>{const hay=[v.name,v.cedula,v.phone,v.age,v.address,v.municipio,v.district,v.zone,v.recinto,v.colegio,v.observation,v.registered_by_name,v.registered_by_role].join(' ').toLowerCase(); return (!q||hay.includes(q))&&(!m||v.municipio===m)&&(!d||(v.district||v.municipio)===d)&&(!z||v.zone===z)&&(!rec||v.recinto===rec)&&(!col||v.colegio===col)&&(!role||v.registered_by_role===role)&&(!reg||v.registered_by_name===reg);});}
 function updateDynamicFilters(){const data=visibleVoters(); fillSelect($('filterSector'), [...new Set(data.map(v=>v.zone).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')), 'Todas'); fillSelect($('filterMesa'), [...new Set(data.map(v=>v.recinto).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')), 'Todos'); fillSelect($('filterColegio'), [...new Set(data.map(v=>v.colegio).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true})), 'Todos'); fillSelect($('filterRegistrar'), [...new Set(data.map(v=>v.registered_by_name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')), 'Todos');}
-function renderStats(){const data=visibleVoters(); const today=new Date().toDateString(); const active=municipioCounts().filter(([,c])=>c>0).length; $('totalVoters') && ($('totalVoters').textContent=data.length); $('totalUsers') && ($('totalUsers').textContent=visibleUsers().length); $('todayVoters') && ($('todayVoters').textContent=data.filter(v=>new Date(v.created_at).toDateString()===today).length); $('activeProvinces') && ($('activeProvinces').textContent=active); $('chartSummaryBadge') && ($('chartSummaryBadge').textContent=`${active} demarcaciones activas`);}
+function renderStats(){const data=visibleVoters(); const today=new Date().toDateString(); const active=municipioCounts().filter(([,c])=>c>0).length; $('totalVoters') && ($('totalVoters').textContent=data.length); $('totalUsers') && ($('totalUsers').textContent=visibleUsers().length); $('todayVoters') && ($('todayVoters').textContent=data.filter(v=>new Date(v.created_at).toDateString()===today).length); $('activeProvinces') && ($('activeProvinces').textContent=active); $('chartSummaryBadge') && ($('chartSummaryBadge').textContent=active===1?'1 demarcación activa':`${active} demarcaciones activas`);}
 function municipioCounts(){const counts=Object.fromEntries(DEMARCACIONES.map(m=>[m,0])); visibleVoters().forEach(v=>{const k=DEMARCACIONES.includes(v.district)?v.district:(MUNICIPIOS.includes(v.municipio)?v.municipio:'Pedernales'); counts[k]=(counts[k]||0)+1}); return DEMARCACIONES.map(m=>[m,counts[m]||0]).sort((a,b)=>b[1]-a[1]||DEMARCACIONES.indexOf(a[0])-DEMARCACIONES.indexOf(b[0]));}
 function zoneCounts(){return municipioCounts();}
 function municipioColor(label, hovered=false){
@@ -243,9 +373,9 @@ function renderChart(){
   const max=Math.max(...data.map(x=>x[1]),1);
   const dark=document.documentElement.dataset.theme==='dark';
   const chartX=isMobile?24:60;
-  const chartY=isMobile?42:52;
+  const chartY=isMobile?74:82;
   const chartW=w-chartX-(isMobile?18:60);
-  const chartH=isMobile?170:190;
+  const chartH=isMobile?150:165;
   ctx.strokeStyle=dark?'rgba(255,255,255,.09)':'rgba(122,31,61,.10)';
   ctx.lineWidth=1;
   for(let i=0;i<=4;i++){
@@ -268,19 +398,32 @@ function renderChart(){
       const grad=ctx.createLinearGradient(0,y,0,y+barH); grad.addColorStop(0,colors[0]); grad.addColorStop(1,colors[1]);
       ctx.fillStyle=grad; roundRect(ctx,x,y,barW,barH,16); ctx.fill(); ctx.restore();
     }else{
-      ctx.fillStyle=dark?'rgba(255,255,255,.12)':'rgba(122,31,61,.12)';
-      roundRect(ctx,x,chartY+chartH-8,barW,8,8); ctx.fill();
+      ctx.fillStyle=dark?'rgba(255,255,255,.08)':'rgba(122,31,61,.08)';
+      roundRect(ctx,x,chartY+chartH-5,barW,5,5); ctx.fill();
     }
-    ctx.fillStyle=dark?'#f8fbff':'#0f172a'; ctx.font=isMobile?'900 22px Inter, sans-serif':'900 28px Inter, sans-serif';
-    const valText=String(val); ctx.fillText(valText,x+(barW-ctx.measureText(valText).width)/2,Math.max(chartY+20,y-12));
-    const pct=total?Math.round((val/total)*100):0;
-    ctx.fillStyle=dark?'rgba(217,239,255,.82)':'rgba(100,116,139,.90)'; ctx.font='800 11px Inter, sans-serif';
-    const pctText=`${pct}%`; ctx.fillText(pctText,x+(barW-ctx.measureText(pctText).width)/2,chartY+chartH+24);
+    const valText=String(val);
+    const valueFont=isMobile?'900 18px Inter, sans-serif':'900 22px Inter, sans-serif';
+    ctx.font=valueFont;
+    const textW=ctx.measureText(valText).width;
+    const pillW=Math.max(isMobile?34:42,textW+18);
+    const pillH=isMobile?28:32;
+    const pillX=x+(barW-pillW)/2;
+    const pillY=(val>0?y:chartY+chartH)-pillH-12;
+    ctx.save();
+    ctx.shadowColor=dark?'rgba(0,0,0,.22)':'rgba(15,23,42,.10)';
+    ctx.shadowBlur=10;
+    ctx.shadowOffsetY=4;
+    ctx.fillStyle=dark?'rgba(248,250,252,.94)':'rgba(255,255,255,.96)';
+    roundRect(ctx,pillX,pillY,pillW,pillH,14);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle=dark?'#111827':'#0f172a';
+    ctx.fillText(valText,pillX+(pillW-textW)/2,pillY+(isMobile?20:23));
     ctx.fillStyle=dark?((label==='Oviedo'||label==='Juancho')?'#F4CF9E':'#8DD3DA'):((label==='Oviedo'||label==='Juancho')?'#B8895B':'#0B4A86'); ctx.font=isMobile?'900 11px Inter, sans-serif':'900 14px Inter, sans-serif';
     const lines=wrapText(ctx,label,isMobile?barW+18:barW+55);
-    lines.forEach((line,idx)=>ctx.fillText(line,x+(barW-ctx.measureText(line).width)/2,chartY+chartH+46+(idx*16)));
+    lines.forEach((line,idx)=>ctx.fillText(line,x+(barW-ctx.measureText(line).width)/2,chartY+chartH+34+(idx*16)));
     ctx.fillStyle=dark?'rgba(217,239,255,.74)':'rgba(100,116,139,.86)'; ctx.font='800 11px Inter, sans-serif';
-    const sub=val===1?'registro':'registros'; ctx.fillText(sub,x+(barW-ctx.measureText(sub).width)/2,chartY+chartH+82);
+    const sub=val===1?'registro':'registros'; ctx.fillText(sub,x+(barW-ctx.measureText(sub).width)/2,chartY+chartH+70);
     chartAreas.push({x,y:val>0?y:chartY+chartH-14,w:barW,h:val>0?barH:18,label,val});
   });
 }
@@ -305,7 +448,31 @@ function searchSummaryHtml(data){
 function renderSearchCards(){
   const box=$('searchResults');
   if(!box)return;
-  box.innerHTML='';
+  const data=filteredVoters().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  box.innerHTML=data.length?data.map(v=>`<article class="mobile-voter-card">
+    <div class="mobile-voter-head">
+      <div>
+        <span class="mobile-voter-label">Simpatizante</span>
+        <h4>${escapeHtml(v.name)}</h4>
+      </div>
+      <span class="mobile-voter-badge">${escapeHtml(v.district||v.municipio||'Sin demarcación')}</span>
+    </div>
+    <div class="mobile-voter-grid">
+      <p><b>Cédula</b><span>${escapeHtml(v.cedula)}</span></p>
+      <p><b>Teléfono</b><span>${escapeHtml(v.phone)}</span></p>
+      <p><b>Edad</b><span>${escapeHtml(v.age)}</span></p>
+      <p><b>Zona</b><span>${escapeHtml(v.zone)}</span></p>
+      <p><b>Recinto</b><span>${escapeHtml(v.recinto)}</span></p>
+      <p><b>Mesa</b><span>${escapeHtml(v.colegio)}</span></p>
+      <p class="mobile-voter-full"><b>Dirección</b><span>${escapeHtml(v.address)}</span></p>
+      <p class="mobile-voter-full"><b>Registrado por</b><span>${escapeHtml(v.registered_by_name)} · ${escapeHtml(v.registered_by_role)}</span></p>
+      ${v.observation?`<p class="mobile-voter-full"><b>Observación</b><span>${escapeHtml(v.observation)}</span></p>`:''}
+    </div>
+    <div class="mobile-voter-foot">
+      <small>${new Date(v.created_at).toLocaleString('es-DO')}</small>
+      ${canEditVoter(v)?`<div class="row-actions"><button class="mini-btn" data-edit-voter="${v.id}">Editar</button><button class="mini-btn danger-mini" data-delete-voter="${v.id}">Eliminar</button></div>`:''}
+    </div>
+  </article>`).join(''):`<div class="mobile-empty-state">No hay registros disponibles.</div>`;
 }
 function renderVotersTable(){const tbody=$('votersTableBody'); if(!tbody)return; const data=filteredVoters().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)); $('filteredCountBadge') && ($('filteredCountBadge').textContent=`${data.length} resultados`); $('filteredCountBadgeTop') && ($('filteredCountBadgeTop').textContent=`${data.length} resultados`); tbody.innerHTML=data.length?data.map(v=>`<tr><td>${escapeHtml(v.name)}</td><td>${escapeHtml(v.cedula)}</td><td>${escapeHtml(v.phone)}</td><td>${escapeHtml(v.age)}</td><td>${escapeHtml(v.address)}</td><td>${escapeHtml(v.municipio)}</td><td>${escapeHtml(v.district||v.municipio||'')}</td><td>${escapeHtml(v.zone)}</td><td>${escapeHtml(v.recinto)}</td><td>${escapeHtml(v.colegio)}</td><td>${escapeHtml(v.observation||'')}</td><td>${escapeHtml(v.registered_by_name)}</td><td><span class="badge">${escapeHtml(v.registered_by_role)}</span></td><td>${new Date(v.created_at).toLocaleString('es-DO')}</td><td>${canEditVoter(v)?`<div class="row-actions"><button class="mini-btn" data-edit-voter="${v.id}">Editar</button><button class="mini-btn danger-mini" data-delete-voter="${v.id}">Eliminar</button></div>`:''}</td></tr>`).join(''):`<tr><td colspan="15" class="empty-cell">No hay registros disponibles.</td></tr>`;}
 function filteredUsersList(){
@@ -317,16 +484,51 @@ function filteredUsersList(){
     return (!q||hay.includes(q))&&(!role||u.role===role)&&(!status||u.status===status);
   });
 }
-function renderUsersTable(){const tbody=$('usersTableBody'); if(!tbody)return; const all=visibleUsers(); const users=filteredUsersList(); $('usersTotalBadge')&&($('usersTotalBadge').textContent=`${all.length} usuarios`); $('usersApprovedBadge')&&($('usersApprovedBadge').textContent=`${all.filter(u=>u.status==='Aprobado').length} aprobados`); tbody.innerHTML=users.length?users.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.email)}</td><td><span class="badge">${escapeHtml(u.role)}</span></td><td>${escapeHtml(u.phone)}</td><td>${escapeHtml(u.municipio||'')}</td><td>${escapeHtml(u.district||u.municipio||'')}</td><td>${escapeHtml(u.zone||'')}</td><td>${escapeHtml(u.recommended_by_name||'')}</td><td><span class="badge ${u.status==='Aprobado'?'status-ok':'status-pending'}">${escapeHtml(u.status)}</span></td><td>${isAdmin()?`<div class="row-actions">${u.status!=='Aprobado'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Eliminar</button>`:''}</div>`:''}</td></tr>`).join(''):`<tr><td colspan="11" class="empty-cell">No hay usuarios disponibles.</td></tr>`;}
-function renderAll(){updateDynamicFilters(); renderStats(); renderChart(); renderRanking(); renderSearchCards(); renderVotersTable(); renderUsersTable();}
+function renderUsersTable(){
+  const tbody=$('usersTableBody');
+  if(!tbody)return;
+  const all=visibleUsers();
+  const users=filteredUsersList();
+  $('usersTotalBadge')&&($('usersTotalBadge').textContent=`${all.length} ${all.length===1?'usuario':'usuarios'}`);
+  $('usersApprovedBadge')&&($('usersApprovedBadge').textContent=`${all.filter(u=>u.status==='Aprobado').length} aprobados`);
+  const rows=users.length?users.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.email)}</td><td><span class="badge">${escapeHtml(u.role)}</span></td><td>${escapeHtml(u.phone)}</td><td>${escapeHtml(u.municipio||'')}</td><td>${escapeHtml(u.district||u.municipio||'')}</td><td>${escapeHtml(u.zone||'')}</td><td>${escapeHtml(u.recommended_by_name||'')}</td><td><span class="badge ${u.status==='Aprobado'?'status-ok':'status-pending'}">${escapeHtml(u.status)}</span></td><td>${isAdmin()?`<div class="row-actions">${u.status!=='Aprobado'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Eliminar</button>`:''}</div>`:''}</td></tr>`).join(''):`<tr><td colspan="11" class="empty-cell">No hay usuarios disponibles.</td></tr>`;
+  tbody.innerHTML=rows;
+
+  const wrap=tbody.closest('.table-wrap');
+  if(wrap && !document.getElementById('usersMobileList')){
+    wrap.insertAdjacentHTML('afterend','<div class="users-mobile-list" id="usersMobileList" aria-label="Lista de usuarios"></div>');
+  }
+  const mobile=$('usersMobileList');
+  if(mobile){
+    mobile.innerHTML=users.length?users.map(u=>`
+      <article class="user-mobile-card">
+        <div class="user-mobile-top">
+          <div>
+            <strong>${escapeHtml(u.name)}</strong>
+            <span>@${escapeHtml(u.username)}</span>
+          </div>
+          <span class="badge ${u.status==='Aprobado'?'status-ok':'status-pending'}">${escapeHtml(u.status)}</span>
+        </div>
+        <div class="user-mobile-grid">
+          <p><small>Correo</small>${escapeHtml(u.email||'—')}</p>
+          <p><small>Rol</small>${escapeHtml(u.role||'—')}</p>
+          <p><small>Teléfono</small>${escapeHtml(u.phone||'—')}</p>
+          <p><small>Municipio</small>${escapeHtml(u.municipio||'—')}</p>
+        </div>
+        ${isAdmin()?`<div class="row-actions user-mobile-actions">${u.status!=='Aprobado'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Eliminar</button>`:''}</div>`:''}
+      </article>`).join(''):`<div class="empty-cell users-mobile-empty">No hay usuarios disponibles.</div>`;
+  }
+}
+function renderAll(){updateDynamicFilters(); renderStats(); renderChart(); renderRanking(); renderSearchCards(); renderVotersTable(); renderUsersTable(); renderAudit();}
 function resetVoterForm(){if(!$('voterForm'))return; $('voterForm').reset(); $('editingVoterId').value=''; $('voterFormTitle').textContent='Registrar votante / simpatizante'; $('saveVoterBtn').lastChild.textContent=' Guardar registro'; $('cancelEditVoterBtn')?.classList.add('hidden'); if($('voterZone')){$('voterZone').readOnly=false;} if($('voterMunicipio')){$('voterMunicipio').disabled=false;} if($('voterDistrict')){$('voterDistrict').disabled=false;} fillSelect($('voterMunicipio'),MUNICIPIOS,'Seleccione'); fillDistrictSelect($('voterDistrict'),$('voterMunicipio')?.value,'Seleccione'); if(isZone()&&currentUser.zone){$('voterZone').value=currentUser.zone; $('voterZone').readOnly=true;} if(isZone()&&currentUser.municipio){$('voterMunicipio').value=currentUser.municipio; fillDistrictSelect($('voterDistrict'),currentUser.municipio,'Seleccione');} if(isZone()&&currentUser.district){$('voterDistrict').value=currentUser.district;} }
 function editVoter(id){const v=read(DB.voters).find(x=>x.id===id); if(!v||!canEditVoter(v))return; $('editingVoterId').value=v.id; $('voterName').value=v.name; $('voterCedula').value=v.cedula; $('voterPhone').value=v.phone; $('voterAge').value=v.age; $('voterAddress').value=v.address; $('voterMunicipio').value=v.municipio; fillDistrictSelect($('voterDistrict'),v.municipio,'Seleccione'); $('voterDistrict').value=v.district||v.municipio||''; $('voterZone').value=v.zone; $('voterRecinto').value=v.recinto; $('voterColegio').value=v.colegio; $('voterObservation').value=v.observation||''; $('voterFormTitle').textContent='Editar registro'; $('saveVoterBtn').lastChild.textContent=' Actualizar registro'; $('cancelEditVoterBtn')?.classList.remove('hidden'); setPanel('registro'); window.scrollTo({top:0,behavior:'smooth'});}
-function deleteVoter(id){const voters=read(DB.voters); const v=voters.find(x=>x.id===id); if(!v||!canEditVoter(v))return; if(!confirm('¿Deseas eliminar este registro?'))return; write(DB.voters,voters.filter(x=>x.id!==id)); renderAll();}
+function deleteVoter(id){const voters=read(DB.voters); const v=voters.find(x=>x.id===id); if(!v||!canEditVoter(v))return; if(!confirm('¿Deseas eliminar este registro?'))return; write(DB.voters,voters.filter(x=>x.id!==id)); addAudit('Registro eliminado','Registros',`${v.name||'Sin nombre'} · ${v.cedula||''}`); renderAll();}
 function openUserModal(id){const u=read(DB.users).find(x=>x.id===id); if(!u||!isAdmin())return; $('editUserId').value=u.id; $('editUserName').value=u.name; $('editUserUsername').value=u.username; $('editUserEmail').value=u.email; $('editUserPhone').value=u.phone; $('editUserRole').value=u.role; $('editUserMunicipio').value=u.municipio||''; fillDistrictSelect($('editUserDistrict'),u.municipio||'','Seleccione'); $('editUserDistrict').value=u.district||u.municipio||''; $('editUserZone').value=u.zone||''; fillRecommendedSelect($('editUserRecommendedBy'),u.recommended_by_id||''); $('userEditModal').classList.remove('hidden');}
 function closeUserModal(){ $('userEditModal')?.classList.add('hidden'); }
 function exportExcel(){
   const rows=filteredVoters().sort((a,b)=>(a.registered_by_role||'').localeCompare(b.registered_by_role||'','es')||(a.registered_by_name||'').localeCompare(b.registered_by_name||'','es')||(a.name||'').localeCompare(b.name||'','es'));
   if(!rows.length)return alert('No hay registros para exportar.');
+  addAudit('Descarga de Excel','Reportes',`${rows.length} registros exportados`);
   const users=visibleUsers().sort((a,b)=>(a.role||'').localeCompare(b.role||'','es')||(a.name||'').localeCompare(b.name||'','es'));
   const now=new Date();
   const today=now.toLocaleString('es-DO');
@@ -502,17 +704,18 @@ function searchSummaryHtml(data){
     </div>
   </div>`;
 }
-function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('closeResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('cancelResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('resetPasswordModal')?.addEventListener('click',e=>{if(e.target===$('resetPasswordModal'))closeResetPasswordModal();}); ['resetPassword','resetPasswordConfirm'].forEach(id=>$(id)?.addEventListener('input',updateResetPasswordUi)); document.querySelectorAll('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=$(btn.dataset.togglePassword); if(!input)return; const visible=input.type==='text'; input.type=visible?'password':'text'; btn.textContent=visible?'Mostrar':'Ocultar'; btn.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');})); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('resetPasswordModal')?.classList.contains('hidden'))closeResetPasswordModal();}); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
-$('loginForm')?.addEventListener('submit',async e=>{e.preventDefault(); const id=clean($('loginUser').value).toLowerCase(); const pass=$('loginPassword').value; const user=read(DB.users).find(u=>u.username.toLowerCase()===id||u.email.toLowerCase()===id); if(!user)return msg($('authMessage'),'Usuario no encontrado.','error'); if(user.status!=='Aprobado')return msg($('authMessage'),'Este usuario aún no ha sido aprobado.','error'); if(!await verifyPassword(pass,user.password_hash))return msg($('authMessage'),'Contraseña incorrecta.','error'); loginUser(user);});
-$('registerForm')?.addEventListener('submit',async e=>{e.preventDefault(); const users=read(DB.users); const first=users.length===0; const pass=$('registerPassword').value; const pass2=$('registerPasswordConfirm').value; if(pass!==pass2)return msg($('authMessage'),'Las contraseñas no coinciden.','error'); const username=clean($('registerUsername').value); const email=clean($('registerEmail').value); if(users.some(u=>u.username.toLowerCase()===username.toLowerCase()||u.email.toLowerCase()===email.toLowerCase()))return msg($('authMessage'),'Ya existe un usuario con ese usuario o correo.','error'); const recommender=users.find(u=>u.id===$('registerRecommendedBy')?.value); const user={id:uid(),name:clean($('registerName').value),username,email,phone:clean($('registerPhone').value),role:first?'Administrador':$('registerRole').value,province:PROVINCE,municipio:clean($('registerMunicipio').value),district:clean($('registerDistrict')?.value),zone:clean($('registerZone').value),recommended_by_id:first?'':(recommender?.id||''),recommended_by_name:first?'':(recommender?.name||''),recommended_by_role:first?'':(recommender?.role||''),status:first?'Aprobado':'Pendiente',password_hash:await hashPassword(pass),created_at:new Date().toISOString()}; users.push(user); write(DB.users,users); $('registerForm').reset(); initSelects(); msg($('authMessage'),first?'Administrador creado. Ya puedes iniciar sesión.':'Usuario creado. Debe ser aprobado por el administrador.','success'); showAuthTab('login');});
-$('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=read(DB.voters); const id=$('editingVoterId').value; const ced=clean($('voterCedula').value); const dup=voters.find(v=>v.cedula===ced&&v.id!==id); if(dup)return msg($('voterMessage'),`Esta cédula ya está registrada por ${dup.registered_by_name}.`,'error'); const item={name:clean($('voterName').value),cedula:ced,phone:clean($('voterPhone').value),age:clean($('voterAge').value),address:clean($('voterAddress').value),province:PROVINCE,municipio:clean($('voterMunicipio').value),district:clean($('voterDistrict')?.value),zone:clean($('voterZone').value),recinto:clean($('voterRecinto').value),colegio:clean($('voterColegio').value),observation:clean($('voterObservation').value)}; if(id){const i=voters.findIndex(v=>v.id===id); if(i>-1&&canEditVoter(voters[i]))voters[i]={...voters[i],...item,updated_at:new Date().toISOString()};} else voters.push({id:uid(),...item,registered_by_id:currentUser.id,registered_by_name:currentUser.name,registered_by_role:currentUser.role,created_at:new Date().toISOString()}); write(DB.voters,voters); resetVoterForm(); renderAll(); msg($('voterMessage'),id?'Registro actualizado correctamente.':'Registro guardado correctamente.','success');});
-$('userEditForm')?.addEventListener('submit',e=>{e.preventDefault(); if(!isAdmin())return; const id=$('editUserId').value; const users=read(DB.users).map(u=>u.id===id?{...u,name:clean($('editUserName').value),username:clean($('editUserUsername').value),email:clean($('editUserEmail').value),phone:clean($('editUserPhone').value),role:$('editUserRole').value,province:PROVINCE,municipio:clean($('editUserMunicipio').value),district:clean($('editUserDistrict')?.value),zone:clean($('editUserZone').value),recommended_by_id:$('editUserRecommendedBy')?.value||'',recommended_by_name:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.name||'',recommended_by_role:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.role||''}:u); write(DB.users,users); closeUserModal(); renderAll();}); $('closeUserEditModalBtn')?.addEventListener('click',closeUserModal); $('cancelUserEditBtn')?.addEventListener('click',closeUserModal);
-document.body.addEventListener('click',e=>{const t=e.target; if(t.dataset.editVoter)editVoter(t.dataset.editVoter); if(t.dataset.deleteVoter)deleteVoter(t.dataset.deleteVoter); if(t.dataset.approveUser&&isAdmin()){write(DB.users,read(DB.users).map(u=>u.id===t.dataset.approveUser?{...u,status:'Aprobado'}:u)); renderAll();} if(t.dataset.editUser)openUserModal(t.dataset.editUser); if(t.dataset.deleteUser&&isAdmin()){if(confirm('¿Deseas eliminar este usuario?')){write(DB.users,read(DB.users).filter(u=>u.id!==t.dataset.deleteUser)); renderAll();}}});}
+function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['auditSearchInput','auditActionFilter'].forEach(id=>$(id)?.addEventListener('input',renderAudit)); $('exportAuditBtn')?.addEventListener('click',exportAudit); $('clearAuditBtn')?.addEventListener('click',()=>{if(!isAdmin())return; if(confirm('¿Deseas limpiar el historial de auditoría local? Esta acción solo conserva el evento de limpieza.')){addAudit('Auditoría limpiada','Auditoría','El administrador limpió el historial local'); write(DB.audit,read(DB.audit).slice(0,1)); renderAudit();}}); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('closeResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('cancelResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('resetPasswordModal')?.addEventListener('click',e=>{if(e.target===$('resetPasswordModal'))closeResetPasswordModal();}); ['resetPassword','resetPasswordConfirm'].forEach(id=>$(id)?.addEventListener('input',updateResetPasswordUi)); document.querySelectorAll('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=$(btn.dataset.togglePassword); if(!input)return; const visible=input.type==='text'; input.type=visible?'password':'text'; btn.textContent=visible?'Mostrar':'Ocultar'; btn.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');})); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('resetPasswordModal')?.classList.contains('hidden'))closeResetPasswordModal();}); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
+$('loginForm')?.addEventListener('submit',async e=>{e.preventDefault(); const id=clean($('loginUser').value).toLowerCase(); const pass=$('loginPassword').value; const user=read(DB.users).find(u=>u.username.toLowerCase()===id||u.email.toLowerCase()===id); if(!user){addAudit('Intento fallido de acceso','Sesión',`Usuario no encontrado: ${id}`,{name:id,role:'No autenticado',username:id}); return msg($('authMessage'),'Usuario no encontrado.','error');} if(user.status!=='Aprobado'){addAudit('Intento fallido de acceso','Sesión',`Usuario pendiente o no aprobado: ${id}`,user); return msg($('authMessage'),'Este usuario aún no ha sido aprobado.','error');} if(!await verifyPassword(pass,user.password_hash)){addAudit('Intento fallido de acceso','Sesión',`Contraseña incorrecta: ${id}`,user); return msg($('authMessage'),'Contraseña incorrecta.','error');} loginUser(user);});
+$('registerForm')?.addEventListener('submit',async e=>{e.preventDefault(); const users=read(DB.users); const first=users.length===0; const pass=$('registerPassword').value; const pass2=$('registerPasswordConfirm').value; if(pass!==pass2)return msg($('authMessage'),'Las contraseñas no coinciden.','error'); const username=clean($('registerUsername').value); const email=clean($('registerEmail').value); if(users.some(u=>u.username.toLowerCase()===username.toLowerCase()||u.email.toLowerCase()===email.toLowerCase()))return msg($('authMessage'),'Ya existe un usuario con ese usuario o correo.','error'); const recommender=users.find(u=>u.id===$('registerRecommendedBy')?.value); const user={id:uid(),name:clean($('registerName').value),username,email,phone:clean($('registerPhone').value),role:first?'Administrador':$('registerRole').value,province:PROVINCE,municipio:clean($('registerMunicipio').value),district:clean($('registerDistrict')?.value),zone:clean($('registerZone').value),recommended_by_id:first?'':(recommender?.id||''),recommended_by_name:first?'':(recommender?.name||''),recommended_by_role:first?'':(recommender?.role||''),status:first?'Aprobado':'Pendiente',password_hash:await hashPassword(pass),created_at:new Date().toISOString()}; users.push(user); write(DB.users,users); $('registerForm').reset(); initSelects(); addAudit(first?'Administrador creado':'Usuario solicitado','Usuarios',`${user.name} · ${user.role}`, first?user:null); msg($('authMessage'),first?'Administrador creado. Ya puedes iniciar sesión.':'Usuario creado. Debe ser aprobado por el administrador.','success'); showAuthTab('login');});
+$('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=read(DB.voters); const id=$('editingVoterId').value; const ced=clean($('voterCedula').value); const dup=voters.find(v=>v.cedula===ced&&v.id!==id); if(dup)return msg($('voterMessage'),`Esta cédula ya está registrada por ${dup.registered_by_name}.`,'error'); const item={name:clean($('voterName').value),cedula:ced,phone:clean($('voterPhone').value),age:clean($('voterAge').value),address:clean($('voterAddress').value),province:PROVINCE,municipio:clean($('voterMunicipio').value),district:clean($('voterDistrict')?.value),zone:clean($('voterZone').value),recinto:clean($('voterRecinto').value),colegio:clean($('voterColegio').value),observation:clean($('voterObservation').value)}; if(id){const i=voters.findIndex(v=>v.id===id); if(i>-1&&canEditVoter(voters[i]))voters[i]={...voters[i],...item,updated_at:new Date().toISOString()};} else voters.push({id:uid(),...item,registered_by_id:currentUser.id,registered_by_name:currentUser.name,registered_by_role:currentUser.role,created_at:new Date().toISOString()}); write(DB.voters,voters); addAudit(id?'Registro editado':'Registro agregado','Registros',`${item.name} · ${item.cedula}`); resetVoterForm(); renderAll(); msg($('voterMessage'),id?'Registro actualizado correctamente.':'Registro guardado correctamente.','success');});
+$('userEditForm')?.addEventListener('submit',e=>{e.preventDefault(); if(!isAdmin())return; const id=$('editUserId').value; const users=read(DB.users).map(u=>u.id===id?{...u,name:clean($('editUserName').value),username:clean($('editUserUsername').value),email:clean($('editUserEmail').value),phone:clean($('editUserPhone').value),role:$('editUserRole').value,province:PROVINCE,municipio:clean($('editUserMunicipio').value),district:clean($('editUserDistrict')?.value),zone:clean($('editUserZone').value),recommended_by_id:$('editUserRecommendedBy')?.value||'',recommended_by_name:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.name||'',recommended_by_role:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.role||''}:u); write(DB.users,users); addAudit('Usuario editado','Usuarios',`${clean($('editUserName').value)} · ${$('editUserRole').value}`); closeUserModal(); renderAll();}); $('closeUserEditModalBtn')?.addEventListener('click',closeUserModal); $('cancelUserEditBtn')?.addEventListener('click',closeUserModal);
+document.body.addEventListener('click',e=>{const t=e.target; if(t.dataset.editVoter)editVoter(t.dataset.editVoter); if(t.dataset.deleteVoter)deleteVoter(t.dataset.deleteVoter); if(t.dataset.approveUser&&isAdmin()){const au=read(DB.users).find(u=>u.id===t.dataset.approveUser); write(DB.users,read(DB.users).map(u=>u.id===t.dataset.approveUser?{...u,status:'Aprobado'}:u)); addAudit('Usuario aprobado','Usuarios',`${au?.name||'Usuario'} · ${au?.role||''}`); renderAll();} if(t.dataset.editUser)openUserModal(t.dataset.editUser); if(t.dataset.deleteUser&&isAdmin()){if(confirm('¿Deseas eliminar este usuario?')){const du=read(DB.users).find(u=>u.id===t.dataset.deleteUser); write(DB.users,read(DB.users).filter(u=>u.id!==t.dataset.deleteUser)); addAudit('Usuario eliminado','Usuarios',`${du?.name||'Usuario'} · ${du?.role||''}`); renderAll();}}});}
 function migrateData(){
   const users=read(DB.users).map(u=>({...u,district:u.district||u.municipio||'',recommended_by_id:u.recommended_by_id||'',recommended_by_name:u.recommended_by_name||'',recommended_by_role:u.recommended_by_role||''}));
   const voters=read(DB.voters).map(v=>({...v,district:v.district||v.municipio||''}));
   write(DB.users,users);
   write(DB.voters,voters);
+  if(!localStorage.getItem(DB.audit))write(DB.audit,[]);
 }
 function boot(){migrateData(); document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light'; initSelects(); bindEvents(); const sid=localStorage.getItem(DB.session); const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado'); if(user)loginUser(user); else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); showAuthTab('login');} handleResetLink(); if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{}); window.addEventListener('resize',renderChart);}
 document.addEventListener('DOMContentLoaded',boot);

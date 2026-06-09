@@ -1,13 +1,20 @@
-const CACHE_NAME = 'pedernales-primero-v4';
+const CACHE_NAME = 'pedernales-primero-v87-final-responsive';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=4',
-  './script.js?v=4',
+  './styles.css?v=87-final-responsive',
+  './script.js?v=87-final-responsive',
   './manifest.json',
   './pwa.js',
   './Logos/logo-pedernales.png',
+  './icons/icon-72.png',
+  './icons/icon-96.png',
+  './icons/icon-128.png',
+  './icons/icon-144.png',
+  './icons/icon-152.png',
+  './icons/icon-180.png',
   './icons/icon-192.png',
+  './icons/icon-384.png',
   './icons/icon-512.png',
   './icons/maskable-192.png',
   './icons/maskable-512.png'

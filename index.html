@@ -2,10 +2,11 @@
 <html lang="es" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Pedernales Primero | Gestión Territorial</title>
   <link rel="icon" href="Logos/logo-pedernales.png" />
-  <meta name="theme-color" content="#0B4A86" />
+  <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B1720" media="(prefers-color-scheme: dark)" />
   <meta name="application-name" content="Pedernales Primero" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=4" />
+  <link rel="stylesheet" href="styles.css?v=87-final-responsive" />
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" defer></script>
 </head>
 <body>
@@ -51,7 +52,7 @@
       <div class="auth-main-header">
         <div class="auth-brand-pill">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-          Plataforma Privincial
+          Plataforma Provincial
         </div>
         <h2>Bienvenido al sistema</h2>
         <p>Ingrese sus credenciales para acceder al panel de gestión territorial.</p>
@@ -218,9 +219,12 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <span class="nav-label">Consulta</span>
         </button>
-      <button class="nav-item" data-panel="usuarios" type="button">
+      <button class="nav-item" data-panel="usuarios" type="button" id="manageUsersBtn">
 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
-<span class="nav-label">Usuarios del Sistema</span></button></div>
+<span class="nav-label">Usuarios del Sistema</span></button>
+<button class="nav-item section-hidden" data-panel="auditoria" type="button" id="auditNavBtn">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 11l2 2 4-5"/><path d="M21 12c-1 5-4 8-9 10-5-2-8-5-9-10V5l9-3 9 3v7z"/></svg>
+<span class="nav-label">Auditoría</span></button></div>
 
       
     </nav>
@@ -282,8 +286,8 @@
       <section class="content-panel" id="panelOverview">
         <div class="pp-page-head">
           <span class="pp-kicker">PEDERNALES PRIMERO · PANEL INTERNO</span>
-          <h1>Resumen general de Pedernales</h1>
-          <p>Estadísticas y métricas del sistema territorial.</p>
+          <h1>Centro de control senatorial de Pedernales</h1>
+          <p>Indicadores estratégicos para la organización territorial provincial.</p>
         </div>
 
         <section class="pp-kpi-grid" aria-label="Indicadores principales">
@@ -317,8 +321,8 @@
           <div class="card chart-card">
             <div class="card-header row-between">
               <div>
-                <h3>Registros por demarcación</h3>
-                <p>Resumen visual de municipios y distritos municipales.</p>
+                <h3>Avance territorial senatorial</h3>
+                <p>Registros visibles por municipio y distrito municipal.</p>
               </div>
               <span class="badge" id="chartSummaryBadge">0 municipios activos</span>
             </div>
@@ -329,8 +333,8 @@
 
           <div class="card ranking-card">
             <div class="card-header">
-              <h3>Ranking territorial</h3>
-              <p>Demarcaciones con mayor cantidad de registros visibles.</p>
+              <h3>Ranking de fuerza territorial</h3>
+              <p>Demarcaciones con mayor movimiento registrado.</p>
             </div>
             <div class="ranking-list" id="provinceRanking" role="list"></div>
           </div>
@@ -562,6 +566,54 @@
         </div>
       </section>
 
+      <section class="content-panel card audit-card section-hidden" id="auditSection">
+        <div class="audit-head">
+          <div>
+            <span class="pp-kicker">CONTROL INTERNO</span>
+            <h3>Auditoría del sistema</h3>
+            <p>Registro de actividad para administradores: accesos, salidas, cambios, descargas y movimientos internos.</p>
+          </div>
+          <div class="audit-actions">
+            <span class="badge" id="auditTotalBadge">0 eventos</span>
+            <button type="button" class="secondary-btn" id="exportAuditBtn">Exportar auditoría</button>
+            <button type="button" class="clear-btn" id="clearAuditBtn">Limpiar historial</button>
+          </div>
+        </div>
+
+        <div class="audit-summary-grid">
+          <div class="audit-summary-item"><span>Hoy</span><strong id="auditTodayCount">0</strong></div>
+          <div class="audit-summary-item"><span>Accesos</span><strong id="auditAccessCount">0</strong></div>
+          <div class="audit-summary-item"><span>Cambios</span><strong id="auditChangesCount">0</strong></div>
+          <div class="audit-summary-item"><span>Descargas</span><strong id="auditExportCount">0</strong></div>
+        </div>
+
+        <div class="audit-toolbar">
+          <div class="pp-users-search audit-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="auditSearchInput" placeholder="Buscar por usuario, acción, módulo o detalle..." autocomplete="off" />
+          </div>
+          <select id="auditActionFilter" aria-label="Filtrar auditoría por acción">
+            <option value="">Todas las acciones</option>
+          </select>
+        </div>
+
+        <div class="table-wrap table-wrap-fixed audit-table-wrap">
+          <table role="grid" aria-label="Tabla de auditoría del sistema">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Usuario</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Acción</th>
+                <th scope="col">Módulo</th>
+                <th scope="col">Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       
       </main>
 
@@ -779,6 +831,6 @@
 
 <script src="pwa.js?v=4" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="script.js?v=4" defer></script>
+<script src="script.js?v=87-final-responsive" defer></script>
 </body>
 </html>
