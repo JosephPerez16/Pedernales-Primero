@@ -339,11 +339,26 @@ async function sendPasswordRecoveryRequest(e){
   }
 }
 
+
+function unlockAuthScroll(){
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  document.body.classList.remove('sidebar-open');
+  document.documentElement.classList.remove('sidebar-open-html');
+  document.body.classList.add('auth-active');
+  document.documentElement.classList.add('auth-active-html');
+}
+
 function showAuthTab(type){$('loginForm')?.classList.toggle('active',type==='login'); $('registerForm')?.classList.toggle('active',type==='register'); $('showLogin')?.classList.toggle('active',type==='login'); $('showRegister')?.classList.toggle('active',type==='register'); firstAdminMode();}
 async function hashPassword(p){return btoa(unescape(encodeURIComponent(p)))}
 async function verifyPassword(p,h){return await hashPassword(p)===h}
-function loginUser(user){currentUser=user; localStorage.setItem(DB.session,user.id); $('authSection')?.classList.add('hidden'); $('dashboardSection')?.classList.remove('hidden'); $('manageUsersBtn')?.classList.toggle('section-hidden',!canManageUsers()); $('auditNavBtn')?.classList.toggle('section-hidden',!canViewAudit()); const initials=(user.name||'U').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(); if($('sidebarAvatar'))$('sidebarAvatar').textContent=initials; if($('sidebarUserName'))$('sidebarUserName').textContent=user.name; if($('sidebarUserRole'))$('sidebarUserRole').textContent=user.role; if($('currentUserInfo'))$('currentUserInfo').textContent=`${user.name} · ${user.role}`; addAudit('Entrada al sistema','Sesión','Inicio de sesión correcto',user); resetVoterForm(); setPanel('overview');}
-function logout(){if(currentUser)addAudit('Salida del sistema','Sesión','Cierre de sesión'); currentUser=null; localStorage.removeItem(DB.session); $('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); $('auditNavBtn')?.classList.add('section-hidden'); showAuthTab('login');}
+function loginUser(user){currentUser=user; localStorage.setItem(DB.session,user.id); document.body.classList.remove('auth-active'); document.documentElement.classList.remove('auth-active-html'); $('authSection')?.classList.add('hidden'); $('dashboardSection')?.classList.remove('hidden'); $('manageUsersBtn')?.classList.toggle('section-hidden',!canManageUsers()); $('auditNavBtn')?.classList.toggle('section-hidden',!canViewAudit()); const initials=(user.name||'U').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase(); if($('sidebarAvatar'))$('sidebarAvatar').textContent=initials; if($('sidebarUserName'))$('sidebarUserName').textContent=user.name; if($('sidebarUserRole'))$('sidebarUserRole').textContent=user.role; if($('currentUserInfo'))$('currentUserInfo').textContent=`${user.name} · ${user.role}`; addAudit('Entrada al sistema','Sesión','Inicio de sesión correcto',user); resetVoterForm(); setPanel('overview');}
+function logout(){if(currentUser)addAudit('Salida del sistema','Sesión','Cierre de sesión'); currentUser=null; localStorage.removeItem(DB.session); $('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); unlockAuthScroll(); $('auditNavBtn')?.classList.add('section-hidden'); showAuthTab('login');}
 function filteredVoters(){const q=clean($('searchInput')?.value).toLowerCase(); const m=$('filterMunicipio')?.value||''; const d=$('filterDistrict')?.value||''; const z=$('filterSector')?.value||''; const rec=$('filterMesa')?.value||''; const col=$('filterColegio')?.value||''; const role=$('filterRole')?.value||''; const reg=$('filterRegistrar')?.value||''; return visibleVoters().filter(v=>{const hay=[v.name,v.cedula,v.phone,v.age,v.address,v.municipio,v.district,v.zone,v.recinto,v.colegio,v.observation,v.registered_by_name,v.registered_by_role].join(' ').toLowerCase(); return (!q||hay.includes(q))&&(!m||v.municipio===m)&&(!d||(v.district||v.municipio)===d)&&(!z||v.zone===z)&&(!rec||v.recinto===rec)&&(!col||v.colegio===col)&&(!role||v.registered_by_role===role)&&(!reg||v.registered_by_name===reg);});}
 function updateDynamicFilters(){const data=visibleVoters(); fillSelect($('filterSector'), [...new Set(data.map(v=>v.zone).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')), 'Todas'); fillSelect($('filterMesa'), [...new Set(data.map(v=>v.recinto).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')), 'Todos'); fillSelect($('filterColegio'), [...new Set(data.map(v=>v.colegio).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true})), 'Todos'); fillSelect($('filterRegistrar'), [...new Set(data.map(v=>v.registered_by_name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')), 'Todos');}
 function renderStats(){const data=visibleVoters(); const today=new Date().toDateString(); const active=municipioCounts().filter(([,c])=>c>0).length; $('totalVoters') && ($('totalVoters').textContent=data.length); $('totalUsers') && ($('totalUsers').textContent=visibleUsers().length); $('todayVoters') && ($('todayVoters').textContent=data.filter(v=>new Date(v.created_at).toDateString()===today).length); $('activeProvinces') && ($('activeProvinces').textContent=active); $('chartSummaryBadge') && ($('chartSummaryBadge').textContent=active===1?'1 demarcación activa':`${active} demarcaciones activas`);}
@@ -362,7 +377,7 @@ function renderChart(){
   const rect=canvas.getBoundingClientRect();
   const isMobile=window.innerWidth<=720;
   const w=Math.max(rect.width,300);
-  const h=isMobile?390:360;
+  const h=isMobile?430:350;
   canvas.width=w*dpr;
   canvas.height=h*dpr;
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -372,18 +387,18 @@ function renderChart(){
   const total=data.reduce((a,x)=>a+x[1],0);
   const max=Math.max(...data.map(x=>x[1]),1);
   const dark=document.documentElement.dataset.theme==='dark';
-  const chartX=isMobile?24:60;
-  const chartY=isMobile?74:82;
-  const chartW=w-chartX-(isMobile?18:60);
-  const chartH=isMobile?150:165;
+  const chartX=isMobile?18:56;
+  const chartY=isMobile?58:76;
+  const chartW=w-chartX-(isMobile?16:56);
+  const chartH=isMobile?230:160;
   ctx.strokeStyle=dark?'rgba(255,255,255,.09)':'rgba(122,31,61,.10)';
   ctx.lineWidth=1;
   for(let i=0;i<=4;i++){
     const y=chartY+chartH-(i/4)*chartH;
     ctx.beginPath(); ctx.moveTo(chartX,y); ctx.lineTo(chartX+chartW,y); ctx.stroke();
   }
-  const gap=isMobile?14:34;
-  const barW=Math.max(38,Math.min(isMobile?54:86,(chartW-gap*(data.length-1))/data.length));
+  const gap=isMobile?18:32;
+  const barW=Math.max(54,Math.min(isMobile?78:82,(chartW-gap*(data.length-1))/data.length));
   const totalW=barW*data.length+gap*(data.length-1);
   const x0=chartX+(chartW-totalW)/2;
   data.forEach(([label,val],i)=>{
@@ -402,11 +417,11 @@ function renderChart(){
       roundRect(ctx,x,chartY+chartH-5,barW,5,5); ctx.fill();
     }
     const valText=String(val);
-    const valueFont=isMobile?'900 18px Inter, sans-serif':'900 22px Inter, sans-serif';
+    const valueFont=isMobile?'900 22px Inter, sans-serif':'900 21px Inter, sans-serif';
     ctx.font=valueFont;
     const textW=ctx.measureText(valText).width;
-    const pillW=Math.max(isMobile?34:42,textW+18);
-    const pillH=isMobile?28:32;
+    const pillW=Math.max(isMobile?44:42,textW+20);
+    const pillH=isMobile?32:31;
     const pillX=x+(barW-pillW)/2;
     const pillY=(val>0?y:chartY+chartH)-pillH-12;
     ctx.save();
@@ -418,12 +433,12 @@ function renderChart(){
     ctx.fill();
     ctx.restore();
     ctx.fillStyle=dark?'#111827':'#0f172a';
-    ctx.fillText(valText,pillX+(pillW-textW)/2,pillY+(isMobile?20:23));
-    ctx.fillStyle=dark?((label==='Oviedo'||label==='Juancho')?'#F4CF9E':'#8DD3DA'):((label==='Oviedo'||label==='Juancho')?'#B8895B':'#0B4A86'); ctx.font=isMobile?'900 11px Inter, sans-serif':'900 14px Inter, sans-serif';
+    ctx.fillText(valText,pillX+(pillW-textW)/2,pillY+(isMobile?23:22));
+    ctx.fillStyle=dark?((label==='Oviedo'||label==='Juancho')?'#F4CF9E':'#8DD3DA'):((label==='Oviedo'||label==='Juancho')?'#B8895B':'#0B4A86'); ctx.font=isMobile?'900 13px Inter, sans-serif':'900 13px Inter, sans-serif';
     const lines=wrapText(ctx,label,isMobile?barW+18:barW+55);
-    lines.forEach((line,idx)=>ctx.fillText(line,x+(barW-ctx.measureText(line).width)/2,chartY+chartH+34+(idx*16)));
+    lines.forEach((line,idx)=>ctx.fillText(line,x+(barW-ctx.measureText(line).width)/2,chartY+chartH+38+(idx*17)));
     ctx.fillStyle=dark?'rgba(217,239,255,.74)':'rgba(100,116,139,.86)'; ctx.font='800 11px Inter, sans-serif';
-    const sub=val===1?'registro':'registros'; ctx.fillText(sub,x+(barW-ctx.measureText(sub).width)/2,chartY+chartH+70);
+    const sub=val===1?'registro':'registros'; ctx.fillText(sub,x+(barW-ctx.measureText(sub).width)/2,chartY+chartH+(isMobile?82:68));
     chartAreas.push({x,y:val>0?y:chartY+chartH-14,w:barW,h:val>0?barH:18,label,val});
   });
 }
@@ -717,5 +732,5 @@ function migrateData(){
   write(DB.voters,voters);
   if(!localStorage.getItem(DB.audit))write(DB.audit,[]);
 }
-function boot(){migrateData(); document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light'; initSelects(); bindEvents(); const sid=localStorage.getItem(DB.session); const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado'); if(user)loginUser(user); else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); showAuthTab('login');} handleResetLink(); if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{}); window.addEventListener('resize',renderChart);}
+function boot(){migrateData(); document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light'; initSelects(); bindEvents(); const sid=localStorage.getItem(DB.session); const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado'); if(user)loginUser(user); else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); unlockAuthScroll(); showAuthTab('login');} handleResetLink(); if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{}); window.addEventListener('resize',renderChart);}
 document.addEventListener('DOMContentLoaded',boot);

@@ -5966,3 +5966,875 @@ input,select,textarea{
   body{overscroll-behavior-y:none;}
   .topbar{padding-top:calc(8px + env(safe-area-inset-top))!important;}
 }
+
+/* Ajustes finales de responsividad y escala general - junio 2026 */
+html, body {
+  min-height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+body {
+  font-size: 15px;
+}
+
+#authSection {
+  min-height: 100svh !important;
+  min-height: 100dvh !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.auth-main,
+.auth-side,
+.auth-side-inner,
+.auth-main-inner {
+  min-height: 0 !important;
+}
+
+.app-content {
+  padding: 22px !important;
+}
+
+.card,
+.table-card,
+.users-card {
+  border-radius: 20px !important;
+  padding: 18px !important;
+}
+
+.panel-head h2,
+.card-head h3 {
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem) !important;
+}
+
+.stats-grid {
+  gap: 14px !important;
+}
+
+.stat-card {
+  min-height: 132px !important;
+  padding: 16px !important;
+  border-radius: 22px !important;
+}
+
+.stat-card-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+}
+
+.stat-card-icon svg {
+  width: 23px !important;
+  height: 23px !important;
+}
+
+.stat-card h3 {
+  font-size: clamp(1.65rem, 3vw, 2rem) !important;
+}
+
+.stat-card > span,
+.stat-card-delta {
+  font-size: .82rem !important;
+}
+
+.topbar {
+  height: 56px !important;
+}
+
+.sidebar-nav .nav-item {
+  min-height: 40px !important;
+}
+
+.chart-card {
+  max-width: none !important;
+}
+
+.chart-canvas-wrap {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 10px !important;
+  overflow: hidden !important;
+}
+
+.chart-canvas-wrap canvas {
+  width: 100% !important;
+  height: 350px !important;
+}
+
+@media (max-width: 900px) {
+  .app-content {
+    padding: 16px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    font-size: 14px !important;
+  }
+
+  #authSection {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    align-items: stretch !important;
+  }
+
+  .auth-side {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+
+  .auth-side-inner {
+    padding: 18px 16px 12px !important;
+    overflow: visible !important;
+  }
+
+  .auth-hero {
+    padding: 0 !important;
+  }
+
+  .auth-hero-logo {
+    width: 56px !important;
+    height: 56px !important;
+    margin-bottom: 8px !important;
+    border-radius: 12px !important;
+  }
+
+  .auth-hero-name {
+    font-size: clamp(1.35rem, 8vw, 2rem) !important;
+    line-height: 1.08 !important;
+    margin-bottom: 5px !important;
+  }
+
+  .auth-hero-sub {
+    font-size: .68rem !important;
+  }
+
+  .auth-main {
+    flex: 1 1 auto !important;
+    overflow: visible !important;
+  }
+
+  .auth-main-inner {
+    padding: 16px 14px 12px !important;
+    overflow: visible !important;
+  }
+
+  .auth-main-header {
+    margin-bottom: 14px !important;
+  }
+
+  .auth-main-header h2 {
+    font-size: 1.18rem !important;
+  }
+
+  .tabs {
+    margin-bottom: 14px !important;
+  }
+
+  .form {
+    gap: 10px !important;
+  }
+
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    min-height: 42px !important;
+    padding: 9px 12px !important;
+  }
+
+  .auth-footer {
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 10px 14px calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-content {
+    padding: 12px !important;
+  }
+
+  .card,
+  .table-card,
+  .users-card {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    min-height: 112px !important;
+    padding: 13px !important;
+    border-radius: 18px !important;
+  }
+
+  .stat-card-icon {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 13px !important;
+  }
+
+  .stat-card-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .stat-card h3 {
+    font-size: 1.55rem !important;
+  }
+
+  .analytics-grid,
+  .main-grid,
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .chart-card {
+    padding: 12px !important;
+  }
+
+  .chart-canvas-wrap {
+    min-height: 430px !important;
+    height: 430px !important;
+    padding: 8px !important;
+    border-radius: 18px !important;
+  }
+
+  .chart-canvas-wrap canvas {
+    height: 410px !important;
+    min-height: 410px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-content {
+    padding: 10px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .stat-card {
+    padding: 12px !important;
+  }
+
+  .stat-card h3 {
+    font-size: 1.42rem !important;
+  }
+
+  .chart-canvas-wrap {
+    min-height: 420px !important;
+    height: 420px !important;
+  }
+
+  .chart-canvas-wrap canvas {
+    height: 400px !important;
+    min-height: 400px !important;
+  }
+}
+
+/* Ajuste exclusivo del login en móvil: permite subir/bajar sin afectar el panel interno */
+@media (max-width: 760px) {
+  #authSection:not(.hidden) {
+    display: block !important;
+    width: 100% !important;
+    min-height: 100svh !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #authSection:not(.hidden) .auth-side,
+  #authSection:not(.hidden) .auth-main {
+    flex: none !important;
+    width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #authSection:not(.hidden) .auth-side-inner,
+  #authSection:not(.hidden) .auth-main-inner {
+    flex: none !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #authSection:not(.hidden) .auth-side-inner {
+    padding: 18px 18px 14px !important;
+  }
+
+  #authSection:not(.hidden) .auth-main-inner {
+    padding: 18px 18px 22px !important;
+  }
+
+  #authSection:not(.hidden) .auth-hero {
+    flex: none !important;
+    min-height: auto !important;
+    padding: 8px 0 2px !important;
+  }
+
+  #authSection:not(.hidden) .auth-hero-logo {
+    width: 62px !important;
+    height: 62px !important;
+    margin-bottom: 10px !important;
+  }
+
+  #authSection:not(.hidden) .auth-hero-name {
+    font-size: 1.35rem !important;
+    line-height: 1.15 !important;
+    margin-bottom: 4px !important;
+  }
+
+  #authSection:not(.hidden) .auth-hero-sub {
+    font-size: 0.72rem !important;
+  }
+
+  #authSection:not(.hidden) .auth-main-header {
+    margin-bottom: 16px !important;
+  }
+
+  #authSection:not(.hidden) .tabs {
+    margin-bottom: 14px !important;
+  }
+}
+
+
+@media (max-width: 760px) {
+  html.auth-active-html,
+  body.auth-active {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    position: static !important;
+    touch-action: auto !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-height: 100svh !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-side,
+  body.auth-active #authSection:not(.hidden) .auth-main {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-side-inner,
+  body.auth-active #authSection:not(.hidden) .auth-main-inner {
+    flex: 0 0 auto !important;
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-main-inner {
+    padding: 18px 18px 30px !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-hero-name {
+    font-size: 1.24rem !important;
+    line-height: 1.12 !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-footer {
+    display: none !important;
+  }
+
+  #dashboardSection:not(.hidden) .topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 150 !important;
+    height: 54px !important;
+  }
+
+  #dashboardSection:not(.hidden) .app-main {
+    padding-top: 54px !important;
+  }
+}
+
+/* =========================================================
+   FIX 90 DEFINITIVO - solo móvil: login con scroll real y header fijo
+   ========================================================= */
+@media (max-width: 860px) {
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100% !important;
+    height: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body.auth-active,
+  html.auth-active-html {
+    position: static !important;
+    overflow: hidden !important;
+    touch-action: auto !important;
+    overscroll-behavior-y: auto !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    max-height: 100svh !important;
+    max-height: 100dvh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-side,
+  body.auth-active #authSection:not(.hidden) .auth-main,
+  body.auth-active #authSection:not(.hidden) .auth-side-inner,
+  body.auth-active #authSection:not(.hidden) .auth-main-inner {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-side-inner {
+    padding: 18px 18px 10px !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-main-inner {
+    display: block !important;
+    padding: 18px 18px 36px !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-footer {
+    display: none !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden),
+  body:not(.auth-active) #dashboardSection:not(.hidden).app-shell {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    max-height: 100svh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .app-main {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100svh !important;
+    max-height: 100dvh !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .topbar {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    flex: 0 0 58px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    width: 100% !important;
+    z-index: 300 !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .app-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .content-panel:not(.section-hidden) {
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+
+/* =========================================================
+   FIX 91 RESPONSIVO - login con footer y dashboard con header fijo real
+   Solo corrige comportamiento móvil del login y del scroll del dashboard.
+   ========================================================= */
+@media (max-width: 860px) {
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body.auth-active,
+  html.auth-active-html {
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+    position: static !important;
+    touch-action: auto !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    max-height: 100svh !important;
+    max-height: 100dvh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+    background: linear-gradient(180deg, #F8FAFC 0%, #EFE7D8 100%) !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-side,
+  body.auth-active #authSection:not(.hidden) .auth-main,
+  body.auth-active #authSection:not(.hidden) .auth-side-inner,
+  body.auth-active #authSection:not(.hidden) .auth-main-inner {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-side-inner {
+    padding: 18px 18px 10px !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-main-inner {
+    display: block !important;
+    padding: 18px 18px 22px !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-footer {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    width: 100% !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 13px 16px calc(15px + env(safe-area-inset-bottom)) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    text-align: center !important;
+    background: linear-gradient(90deg, #0B4A86 0%, #3F7F8B 55%, #6B8F8A 100%) !important;
+    border-top: 3px solid #B8895B !important;
+    color: #ffffff !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-footer-secure,
+  body.auth-active #authSection:not(.hidden) .auth-footer-copy {
+    color: rgba(255,255,255,.9) !important;
+    font-size: .72rem !important;
+    line-height: 1.25 !important;
+  }
+
+  body.auth-active #authSection:not(.hidden) .auth-footer-secure {
+    justify-content: center !important;
+  }
+
+  body:not(.auth-active) {
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden),
+  body:not(.auth-active) #dashboardSection:not(.hidden).app-shell {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    max-height: 100svh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .app-main {
+    display: block !important;
+    width: 100% !important;
+    height: 100svh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100svh !important;
+    max-height: 100dvh !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    z-index: 500 !important;
+    border-radius: 0 0 22px 22px !important;
+    background: var(--surface-overlay) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    box-shadow: 0 12px 28px rgba(15,23,42,.10) !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .app-content {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 24px !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .site-footer {
+    position: relative !important;
+    inset: auto !important;
+    flex: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+}
+
+/* === FIX DEFINITIVO HEADER MOVIL === */
+@media (max-width: 768px){
+  html,
+  body{
+    width:100% !important;
+    min-height:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  body:has(#dashboardSection:not(.hidden)){
+    overflow:hidden !important;
+    height:100dvh !important;
+  }
+
+  #dashboardSection:not(.hidden),
+  #dashboardSection:not(.hidden) .app-main{
+    height:100dvh !important;
+    min-height:100dvh !important;
+    max-height:100dvh !important;
+    overflow:hidden !important;
+  }
+
+  #dashboardSection:not(.hidden) .app-main{
+    margin-left:0 !important;
+    padding-top:56px !important;
+    position:relative !important;
+  }
+
+  #dashboardSection:not(.hidden) .topbar{
+    position:fixed !important;
+    top:0 !important;
+    left:0 !important;
+    right:0 !important;
+    width:100% !important;
+    height:56px !important;
+    z-index:1000 !important;
+    margin:0 !important;
+    transform:none !important;
+    background:rgba(255,255,255,.92) !important;
+    backdrop-filter:blur(18px) !important;
+    -webkit-backdrop-filter:blur(18px) !important;
+    box-shadow:0 10px 28px rgba(15,23,42,.10) !important;
+  }
+
+  [data-theme="dark"] #dashboardSection:not(.hidden) .topbar{
+    background:rgba(17,24,39,.94) !important;
+    box-shadow:0 10px 28px rgba(0,0,0,.28) !important;
+  }
+
+  #dashboardSection:not(.hidden) .app-content{
+    flex:1 1 auto !important;
+    height:calc(100dvh - 56px) !important;
+    max-height:calc(100dvh - 56px) !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+    padding-bottom:28px !important;
+  }
+
+  #dashboardSection:not(.hidden) .site-footer{
+    position:static !important;
+    flex-shrink:0 !important;
+  }
+
+  #dashboardSection:not(.hidden) .sidebar{
+    position:fixed !important;
+    top:56px !important;
+    left:0 !important;
+    height:calc(100dvh - 56px) !important;
+    max-height:calc(100dvh - 56px) !important;
+    z-index:990 !important;
+  }
+
+  #dashboardSection:not(.hidden) .sidebar-overlay{
+    position:fixed !important;
+    top:56px !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+    height:calc(100dvh - 56px) !important;
+    z-index:980 !important;
+  }
+}
+
+/* === FIX RESPONSIVO DEFINITIVO: HEADER MÓVIL FIJO + MENÚ SOBRE EL HEADER === */
+@media (max-width: 640px) {
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  #dashboardSection:not(.hidden),
+  .app-shell:not(.hidden) {
+    display: block !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+
+  #dashboardSection:not(.hidden) .app-main {
+    margin-left: 0 !important;
+    min-height: 100dvh !important;
+    padding-top: 54px !important;
+    overflow: visible !important;
+  }
+
+  #dashboardSection:not(.hidden) .topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 54px !important;
+    z-index: 300 !important;
+    margin: 0 !important;
+    transform: none !important;
+    background: var(--surface-overlay) !important;
+    border-bottom: 1px solid var(--border) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10) !important;
+  }
+
+  #dashboardSection:not(.hidden) .app-content {
+    padding-top: 16px !important;
+  }
+
+  #dashboardSection:not(.hidden) .sidebar-toggle {
+    display: flex !important;
+    position: relative !important;
+    z-index: 320 !important;
+  }
+
+  #dashboardSection:not(.hidden) .sidebar-overlay,
+  #dashboardSection:not(.hidden) .sidebar-overlay.show,
+  #dashboardSection:not(.hidden) .sidebar-overlay.visible {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 900 !important;
+  }
+
+  #dashboardSection:not(.hidden) .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    z-index: 950 !important;
+  }
+
+  #dashboardSection:not(.hidden) .sidebar.open {
+    transform: translateX(0) !important;
+    z-index: 950 !important;
+  }
+
+  body.sidebar-open #dashboardSection:not(.hidden) .topbar {
+    z-index: 300 !important;
+  }
+}
