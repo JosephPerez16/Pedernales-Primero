@@ -15,7 +15,8 @@ const EMAILJS_CONFIG = {
   serviceId: 'service_qe268hf',
   templateId: 'template_2alexku',
   publicKey: 'SiS_aT7fhjvtowkbA',
-  adminEmail: 'pedernalesprimero@hotmail.com'
+  adminEmail: 'pedernalesprimero@hotmail.com',
+  appUrl: 'https://josephperez16.github.io/Pedernales-Primero/'
 };
 let currentUser = null;
 let chartHoverIndex = -1;
@@ -185,8 +186,10 @@ function closeForgotPasswordModal(){
   $('forgotPasswordModal')?.classList.add('hidden');
 }
 function buildResetLink(email){
-  const url = new URL(window.location.href);
+  const base = EMAILJS_CONFIG.appUrl || window.location.href;
+  const url = new URL(base, window.location.href);
   url.hash = '';
+  url.search = '';
   url.searchParams.set('reset', '1');
   url.searchParams.set('email', email);
   return url.toString();
@@ -296,8 +299,11 @@ async function sendPasswordRecoveryRequest(e){
   const link=buildResetLink(user.email || input);
   const params={
     to_email: user.email || input,
-    cc_email: EMAILJS_CONFIG.adminEmail,
-    reply_to: EMAILJS_CONFIG.adminEmail,
+    reply_to: user.email || input,
+    from_name: 'Pedernales Primero',
+    app_name: 'Pedernales Primero',
+    subject: 'Restablecer acceso a Pedernales Primero',
+    support_email: EMAILJS_CONFIG.adminEmail,
     email: user.email||'No registrado',
     name: user.name||'Usuario',
     username: user.username||'',
@@ -306,9 +312,12 @@ async function sendPasswordRecoveryRequest(e){
     user_email: user.email||'No registrado',
     user_username: user.username||'',
     user_role: user.role||'',
+    app_url: EMAILJS_CONFIG.appUrl,
     app_link: link,
+    reset_link: link,
     link,
-    message:`Solicitud de recuperación de contraseña para ${user.name||'Usuario'} (${user.username||''}). Correo registrado: ${user.email||'No registrado'}. Rol: ${user.role||'No definido'}. Revise el usuario en Pedernales Primero y restablezca la contraseña desde Usuarios del Sistema.`
+    year: new Date().getFullYear(),
+    message:`Hola ${user.name||'Usuario'}, usa este enlace para restablecer tu contraseña de Pedernales Primero: ${link}`
   };
 
   const btn=$('sendForgotPasswordBtn') || document.querySelector('#forgotForm button[type="submit"]') || document.querySelector('#forgotPasswordForm button[type="submit"]');
