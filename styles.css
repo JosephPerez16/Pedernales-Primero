@@ -5928,10 +5928,6 @@ input,select,textarea{
 }
 @media(display-mode:standalone){
   body{overscroll-behavior-y:none;}
-  .topbar{
-    padding-top:8px!important;
-    min-height:calc(60px + env(safe-area-inset-top))!important;
-  }
 }
 
 
@@ -7296,6 +7292,77 @@ html[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:-webkit-
       min-width: 42px !important;
       min-height: 42px !important;
       margin-top: 0 !important;
+      transform: none !important;
+    }
+  }
+}
+
+
+/* ==========================================================
+   iOS PWA ONLY - Dashboard safe area fix
+   Mantiene login intacto. Solo corrige el panel instalado
+   como app en iPhone para que el header respete la zona
+   superior sin romper el scroll ni montar el footer.
+   ========================================================== */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) and (max-width: 768px) {
+    body:not(.auth-active) #dashboardSection:not(.hidden),
+    body:not(.auth-active) #dashboardSection:not(.hidden).app-shell {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100dvh !important;
+      min-height: 100dvh !important;
+      max-height: 100dvh !important;
+      overflow: hidden !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .app-main {
+      position: relative !important;
+      display: block !important;
+      width: 100% !important;
+      height: 100dvh !important;
+      min-height: 100dvh !important;
+      max-height: 100dvh !important;
+      margin-left: 0 !important;
+      padding-top: calc(58px + env(safe-area-inset-top)) !important;
+      overflow: hidden !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .topbar {
+      position: fixed !important;
+      top: env(safe-area-inset-top) !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      height: 58px !important;
+      min-height: 58px !important;
+      max-height: 58px !important;
+      padding: 0 18px !important;
+      margin: 0 !important;
+      transform: none !important;
+      z-index: 1000 !important;
+      border-radius: 0 0 22px 22px !important;
+      align-items: center !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .app-content {
+      height: calc(100dvh - 58px - env(safe-area-inset-top)) !important;
+      max-height: calc(100dvh - 58px - env(safe-area-inset-top)) !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding-top: 18px !important;
+      padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .site-footer {
+      position: relative !important;
+      inset: auto !important;
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      margin: 0 !important;
       transform: none !important;
     }
   }
