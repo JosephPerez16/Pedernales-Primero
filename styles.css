@@ -5928,7 +5928,10 @@ input,select,textarea{
 }
 @media(display-mode:standalone){
   body{overscroll-behavior-y:none;}
-  .topbar{padding-top:calc(8px + env(safe-area-inset-top))!important;}
+  .topbar{
+    padding-top:8px!important;
+    min-height:calc(60px + env(safe-area-inset-top))!important;
+  }
 }
 
 
