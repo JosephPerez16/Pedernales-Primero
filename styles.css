@@ -7257,3 +7257,43 @@ html[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:-webkit-
 [data-theme="dark"] #panelRegistro #voterForm .input-group label{
   color:#EAF2FA!important;
 }
+
+
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) and (max-width: 860px) {
+    body:not(.auth-active) #dashboardSection:not(.hidden) .topbar {
+      top: 0 !important;
+      height: calc(58px + env(safe-area-inset-top)) !important;
+      min-height: calc(58px + env(safe-area-inset-top)) !important;
+      padding: calc(env(safe-area-inset-top) + 8px) 12px 8px !important;
+      align-items: center !important;
+      border-radius: 0 0 22px 22px !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .app-main {
+      padding-top: calc(58px + env(safe-area-inset-top)) !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .app-content {
+      height: calc(100dvh - 58px - env(safe-area-inset-top)) !important;
+      max-height: calc(100dvh - 58px - env(safe-area-inset-top)) !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .topbar-left,
+    body:not(.auth-active) #dashboardSection:not(.hidden) .topbar-actions {
+      align-items: center !important;
+    }
+
+    body:not(.auth-active) #dashboardSection:not(.hidden) .sidebar-toggle,
+    body:not(.auth-active) #dashboardSection:not(.hidden) .theme-toggle,
+    body:not(.auth-active) #dashboardSection:not(.hidden) .topbar-actions .secondary-btn,
+    body:not(.auth-active) #dashboardSection:not(.hidden) .topbar-actions .danger-btn {
+      width: 42px !important;
+      height: 42px !important;
+      min-width: 42px !important;
+      min-height: 42px !important;
+      margin-top: 0 !important;
+      transform: none !important;
+    }
+  }
+}
