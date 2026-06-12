@@ -1864,7 +1864,7 @@ body, .sidebar, .topbar, .card, .stat-card, .modal-card,
 .summary-section-title{font-size:.76rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:900;margin:0 0 7px}.summary-block-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-list{display:grid;gap:8px}.summary-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:14px;background:rgba(8,42,90,.06);font-size:.84rem}.summary-row strong{color:var(--text);font-weight:900}.summary-row b{color:var(--primary);font-variant-numeric:tabular-nums}.registro-card{border:1px solid rgba(8,42,90,.12);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(244,249,255,.94));padding:14px;box-shadow:0 12px 30px rgba(8,42,90,.08)}.registro-card h3{font-size:1rem;margin:0 0 6px;color:var(--text)}.registro-municipio{display:inline-flex;margin-bottom:8px;padding:5px 9px;border-radius:999px;background:rgba(8,42,90,.1);color:var(--primary);font-size:.76rem}.registro-meta,.registro-info-list{display:grid;gap:5px}.registro-meta span,.registro-info-list p{font-size:.8rem;color:var(--muted);margin:0;line-height:1.35}.registro-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.search-card .input-group{margin-bottom:12px}@media(max-width:1060px){#panelOverview .analytics-grid,.consulta-layout{grid-template-columns:1fr}#consultaAdvancedCard{position:static}#panelOverview .chart-card,#panelOverview .ranking-card{min-height:auto}}@media(max-width:720px){.registro-grid-solo{max-width:100%}.consulta-layout{gap:14px}#consultaAdvancedCard .search-results{max-height:none;overflow:visible}.summary-block-grid{grid-template-columns:1fr}#panelOverview .chart-card canvas{height:360px!important}.table-wrap-fixed{max-height:none}.topbar-search input::placeholder{color:transparent}}@media(max-width:430px){#panelOverview .chart-card canvas{height:390px!important}.summary-pill-grid{grid-template-columns:1fr!important}.registro-card{border-radius:18px;padding:12px}}
 
 
-/* Consulta mejorada */
+
 #panelConsulta .consulta-layout{
 display:grid!important;
 grid-template-columns:1fr!important;
@@ -2232,7 +2232,7 @@ padding-bottom:24px;
   .registro-info-list{grid-template-columns:1fr!important}
 }
 
-/* Ajuste Usuarios del Sistema: visible solo en su pestaña y alineado correctamente */
+
 #usersSection.content-panel{
   width:100%;
   margin:0!important;
@@ -2267,7 +2267,7 @@ padding-bottom:24px;
   font-weight:950!important;
 }
 
-/* ===== Rediseño visual integral Pedernales Primero: turismo premium territorial ===== */
+
 :root{
   --pp-bg:#f3f7fb;
   --pp-card:#ffffff;
@@ -2310,7 +2310,7 @@ body{background:linear-gradient(180deg,#f4f8fd 0%,#eef4fb 100%)!important;color:
 .chart-card,.ranking-card{padding:28px!important;}
 .ranking-list [role="listitem"],.ranking-item{background:#eef5fd!important;border-radius:16px!important;border:1px solid rgba(8,42,90,.08)!important;}
 
-/* Consulta compacta */
+
 #panelConsulta{display:flex;flex-direction:column;gap:24px;}
 .pp-search-card{padding:28px 30px!important;}
 .pp-search-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(8,42,90,.10);}
@@ -2336,7 +2336,7 @@ table tbody tr:hover td{background:#f4f9ff!important;}
 .mini-btn{border-radius:12px!important;font-weight:900!important;border:1px solid rgba(0,61,143,.16)!important;background:#eef6ff!important;color:#1F2937!important;padding:8px 12px!important;}
 .danger-mini{background:#fff1f2!important;color:#d62828!important;border-color:#fecaca!important;}
 
-/* Usuarios del sistema */
+
 #usersSection.content-panel{padding:0!important;overflow:hidden!important;}
 .pp-users-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:28px 30px 18px;border-bottom:1px solid rgba(8,42,90,.10);}
 .pp-users-head h3{font-size:1.55rem!important;margin:0 0 4px!important;}
@@ -2351,7 +2351,7 @@ table tbody tr:hover td{background:#f4f9ff!important;}
 #usersSection table thead th{background:linear-gradient(145deg,#eef5fd,#e4edf8)!important;color:#284565!important;}
 .status-ok{background:#e8f7ee!important;color:#087541!important}.status-pending{background:#fff8e6!important;color:#a16207!important}
 
-/* Registro */
+
 #panelRegistro .panel-heading{margin-bottom:18px!important;}
 .form-card{padding:28px!important;}
 .primary-btn{border-radius:16px!important;font-weight:950!important;box-shadow:0 12px 26px rgba(0,61,143,.16)!important;}
@@ -2360,7 +2360,7 @@ table tbody tr:hover td{background:#f4f9ff!important;}
 @media(max-width:760px){.app-content{padding:20px 14px!important}.pp-kpi-grid,.pp-filter-grid{grid-template-columns:1fr}.pp-users-head,.pp-search-head{flex-direction:column}.pp-users-toolbar{grid-template-columns:1fr;padding:16px}.pp-search-card{padding:22px 18px!important}.consulta-table-card .card-header{padding:22px 18px!important}.pp-page-head h1{font-size:1.7rem}.pp-kpi-card{min-height:150px}.topbar-search{display:none!important}}
 
 
-/* ===== Identidad final Pedernales Primero: arena, costa y dorado premium ===== */
+
 :root{
   --gov-blue:#1F2937;
   --gov-blue-hover:#374151;
@@ -2438,7 +2438,7 @@ table tbody tr:hover td{background:#F8FAFC!important;}
 #provinceChart{filter:drop-shadow(0 12px 22px rgba(74,66,56,.10));}
 .pp-kpi-icon svg{width:24px;height:24px;}
 
-/* ===== Ajuste final solicitado: identidad Pedernales sin azul, footer coherente y formulario organizado ===== */
+
 :root{
   --gov-blue:#6F7D69;
   --gov-blue-hover:#4F5A4A;
@@ -2607,10 +2607,7 @@ table thead th{
   #voterForm .input-group input,#voterForm .input-group select,#voterForm .input-group textarea{min-height:58px!important;}
 }
 
-/* =========================================================
-   TEMA FINAL PEDERNALES PRIMERO - INSTITUCIONAL MODERNO
-   Paleta: gris ejecutivo + rojo acento, modo claro/oscuro completo
-   ========================================================= */
+
 :root{
   --gov-blue:#1F2937!important;
   --gov-blue-hover:#374151!important;
@@ -2740,10 +2737,7 @@ table tbody tr:hover td{background:var(--gov-blue-faint)!important;}
 [data-theme="dark"] .input-group label,[data-theme="dark"] .section-title p,[data-theme="dark"] .card p,[data-theme="dark"] .registro-meta span,[data-theme="dark"] .registro-info-list p,[data-theme="dark"] .summary-mini-line{color:#CBD5E1!important;}
 
 
-/* ==========================================================
-   TEMA FINAL SELECCIONADO: OPCIÓN 5 - ARENA Y MAR
-   Paleta: Mar profundo, verde costero, arena cálida y fondo crema.
-   ========================================================== */
+
 :root{
   --gov-blue:#0B4A86!important;
   --gov-blue-hover:#083965!important;
@@ -2868,7 +2862,7 @@ table tbody tr:hover td{background:#FAF6F0!important;}
 [data-theme="dark"] .mini-btn,[data-theme="dark"] .ranking-item,[data-theme="dark"] .summary-pill-grid span{background:rgba(140,195,216,.12)!important;color:#F7EFE5!important;border-color:rgba(140,195,216,.22)!important;}
 
 
-/* ===== Ajustes finales Arena y Mar: contraste, panel, footer y consulta compacta ===== */
+
 :root{
   --sea-deep:#0B3C5D;
   --sea-blue:#0B4A86;
@@ -2986,7 +2980,7 @@ html[data-theme="dark"] #filteredCountBadge,
 html[data-theme="dark"] #filteredCountBadgeTop,
 html[data-theme="dark"] #usersApprovedBadge{background:rgba(214,184,140,.14)!important;color:#F8E6C7!important;border-color:rgba(214,184,140,.25)!important;}
 
-/* Panel principal más moderno */
+
 .sidebar{background:var(--brand-gradient)!important;box-shadow:18px 0 55px rgba(7,23,29,.16);}
 .sidebar::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 0%,rgba(255,255,255,.10),transparent 28%),radial-gradient(circle at 100% 95%,rgba(184,137,91,.22),transparent 35%);pointer-events:none;}
 .sidebar-header,.sidebar-nav,.sidebar-footer{position:relative;z-index:1;}
@@ -3007,7 +3001,7 @@ html[data-theme="dark"] #usersApprovedBadge{background:rgba(214,184,140,.14)!imp
 .sidebar-user-info strong{font-size:.9rem!important;font-weight:950!important;}
 .sidebar-user-info span{font-size:.76rem!important;color:rgba(255,255,255,.78)!important;}
 
-/* Consulta compacta parecida a Registros visibles */
+
 #panelConsulta{gap:18px!important;}
 #panelConsulta::before{display:none!important;}
 #consultaAdvancedCard.pp-search-card{
@@ -3063,7 +3057,7 @@ html[data-theme="dark"] #usersApprovedBadge{background:rgba(214,184,140,.14)!imp
 .consulta-table-card .card-header h3{font-size:1.18rem!important;}
 .consulta-table-card .card-header p{font-size:.84rem!important;}
 
-/* Footer adaptado a Arena y Mar */
+
 .site-footer{margin-left:var(--sidebar-width);background:linear-gradient(145deg,#0B3C5D,#0B4A86 55%,#6B8F8A)!important;color:#fff!important;box-shadow:0 -16px 38px rgba(0,31,84,.10);}
 .footer-topband{height:5px!important;background:linear-gradient(90deg,#B8895B,#F3D7A8,#6B8F8A)!important;}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.10)!important;}
@@ -3087,7 +3081,7 @@ html[data-theme="dark"] #usersApprovedBadge{background:rgba(214,184,140,.14)!imp
 }
 
 
-/* === Arena y Mar refinado === */
+
 [data-theme="dark"]{
   --text:#F8FAFC;
   --text-secondary:#CBD5E1;
@@ -3145,7 +3139,7 @@ footer{
 }
 
 
-/* Correcciones finales Dark Mode + Footer */
+
 [data-theme="dark"] .input-group label,
 [data-theme="dark"] .form-section label,
 [data-theme="dark"] .field-label{
@@ -3179,8 +3173,8 @@ footer.app-footer{
 }
 
 
-/* === FOOTERS DEFINITIVOS === */
-/* Login: footer pequeño como footer real de la página principal */
+
+
 #authSection{
   display:flex !important;
   flex-wrap:wrap !important;
@@ -3230,7 +3224,7 @@ footer.app-footer{
   color:#F3D7A8 !important;
 }
 
-/* Dashboard: footer institucional únicamente dentro del panel */
+
 .app-main .site-footer{
   width:100% !important;
   margin:0 !important;
@@ -3303,9 +3297,8 @@ footer.app-footer{
 }
 
 
-/* === FIX FINAL: Separar Login y Dashboard === */
-/* Estas reglas van al final porque reglas anteriores usaban #authSection { display:flex!important; }
-   y eso rompía la clase .hidden al iniciar sesión. */
+
+
 #authSection.hidden,
 #dashboardSection.hidden,
 .app-shell.hidden,
@@ -3322,18 +3315,18 @@ div.hidden {
   display: grid !important;
 }
 
-/* El footer pequeño solo vive con el login */
+
 #authSection.hidden .auth-footer {
   display: none !important;
 }
 
-/* El footer institucional solo vive dentro del dashboard */
+
 #dashboardSection.hidden .site-footer {
   display: none !important;
 }
 
 
-/* Fix footer login móvil pegado abajo */
+
 @media (max-width: 768px){
   #authSection{
     min-height:100dvh !important;
@@ -3352,8 +3345,8 @@ div.hidden {
 }
 
 
-/* === AJUSTES PRECISOS PEDERNALES 50 === */
-/* 1) Quitar la franja/detalle dorado a la izquierda del item activo del sidebar */
+
+
 .nav-item.active::before,
 .sidebar .nav-item.active::before,
 .app-sidebar .nav-item.active::before,
@@ -3364,13 +3357,13 @@ div.hidden {
   background: transparent !important;
 }
 
-/* Mantener la selección limpia, sin indicador lateral */
+
 .nav-item.active {
   border-left: 0 !important;
   box-shadow: none !important;
 }
 
-/* 2) Quitar fondo/sombra/franja detrás de "PEDERNALES PRIMERO · PANEL INTERNO" */
+
 .pp-kicker,
 .pp-page-head .pp-kicker,
 .content-panel .pp-kicker {
@@ -3384,7 +3377,7 @@ div.hidden {
   display: inline-block !important;
 }
 
-/* Por si el fondo viene de pseudo-elementos */
+
 .pp-kicker::before,
 .pp-kicker::after,
 .pp-page-head .pp-kicker::before,
@@ -3393,7 +3386,7 @@ div.hidden {
   display: none !important;
 }
 
-/* 3) Números de tarjetas en modo oscuro en blanco */
+
 [data-theme="dark"] .pp-kpi-card strong,
 [data-theme="dark"] .pp-kpi-card strong *,
 [data-theme="dark"] #totalVoters,
@@ -3406,7 +3399,7 @@ div.hidden {
   -webkit-text-fill-color: #FFFFFF !important;
 }
 
-/* Mejor contraste del texto de las tarjetas en dark, sin cambiar estructura */
+
 [data-theme="dark"] .pp-kpi-card span,
 [data-theme="dark"] .pp-kpi-card small {
   color: #CBD5E1 !important;
@@ -3414,7 +3407,7 @@ div.hidden {
 }
 
 
-/* Ajuste modo oscuro - Nuevo Registro */
+
 html[data-theme="dark"] .form-label,
 html[data-theme="dark"] label,
 html[data-theme="dark"] .input-group label,
@@ -3442,7 +3435,7 @@ html[data-theme="dark"] textarea::placeholder{
 }
 
 
-/* DARK MODE FORM FIX */
+
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea{
@@ -3474,7 +3467,7 @@ html[data-theme="dark"] textarea::placeholder{
 }
 
 
-/* CHATGPT FIX REGISTRO DARK MODE */
+
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea{
@@ -3489,7 +3482,7 @@ html[data-theme="dark"] textarea::placeholder{
 }
 
 
-/* FIX JOSE - texto negro en campos registrar votante dark mode */
+
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea{
@@ -3509,8 +3502,8 @@ html[data-theme="dark"] textarea::placeholder{
 }
 
 
-/* === PREMIUM DARK MODE SOLO: NUEVO REGISTRO === */
-/* Alcance limitado al panel de registro para no afectar Resumen, Consulta, Usuarios ni Footer */
+
+
 [data-theme="dark"] #panelRegister .card,
 [data-theme="dark"] #panelRegister .form-card,
 [data-theme="dark"] #panelRegister .content-card,
@@ -3523,7 +3516,7 @@ html[data-theme="dark"] textarea::placeholder{
   box-shadow: 0 24px 70px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
 
-/* Encabezado del formulario */
+
 [data-theme="dark"] #panelRegister h1,
 [data-theme="dark"] #panelRegister h2,
 [data-theme="dark"] #panelRegister h3,
@@ -3539,7 +3532,7 @@ html[data-theme="dark"] textarea::placeholder{
   color: #D7E2E5 !important;
 }
 
-/* Labels visibles y premium */
+
 [data-theme="dark"] #panelRegister label,
 [data-theme="dark"] #panelRegister .form-label,
 [data-theme="dark"] #panelRegister .field-label {
@@ -3549,7 +3542,7 @@ html[data-theme="dark"] textarea::placeholder{
   letter-spacing: .01em !important;
 }
 
-/* Campos claros uniformes con texto negro, como solicitaste */
+
 [data-theme="dark"] #panelRegister input,
 [data-theme="dark"] #panelRegister select,
 [data-theme="dark"] #panelRegister textarea {
@@ -3561,7 +3554,7 @@ html[data-theme="dark"] textarea::placeholder{
   caret-color: #000000 !important;
 }
 
-/* Placeholders visibles sin parecer texto escrito */
+
 [data-theme="dark"] #panelRegister input::placeholder,
 [data-theme="dark"] #panelRegister textarea::placeholder {
   color: #7A8796 !important;
@@ -3569,7 +3562,7 @@ html[data-theme="dark"] textarea::placeholder{
   opacity: 1 !important;
 }
 
-/* Selects y opciones en negro */
+
 [data-theme="dark"] #panelRegister select,
 [data-theme="dark"] #panelRegister select option {
   color: #000000 !important;
@@ -3577,7 +3570,7 @@ html[data-theme="dark"] textarea::placeholder{
   background: #FFFFFF !important;
 }
 
-/* Estado focus elegante */
+
 [data-theme="dark"] #panelRegister input:focus,
 [data-theme="dark"] #panelRegister select:focus,
 [data-theme="dark"] #panelRegister textarea:focus {
@@ -3589,7 +3582,7 @@ html[data-theme="dark"] textarea::placeholder{
     inset 0 1px 0 rgba(255,255,255,.95) !important;
 }
 
-/* Botones del módulo con acabado premium, solo en registro */
+
 [data-theme="dark"] #panelRegister button:not(.icon-btn):not(.danger-btn),
 [data-theme="dark"] #panelRegister .primary-btn,
 [data-theme="dark"] #panelRegister .submit-btn {
@@ -3599,7 +3592,7 @@ html[data-theme="dark"] textarea::placeholder{
   box-shadow: 0 16px 34px rgba(0,0,0,.24) !important;
 }
 
-/* Validación visual sin romper colores */
+
 [data-theme="dark"] #panelRegister input:disabled,
 [data-theme="dark"] #panelRegister select:disabled,
 [data-theme="dark"] #panelRegister textarea:disabled {
@@ -3609,7 +3602,7 @@ html[data-theme="dark"] textarea::placeholder{
   opacity: .88 !important;
 }
 
-/* Compatibilidad por si el formulario usa otra clase dentro del panel */
+
 [data-theme="dark"] #panelRegister .form-grid,
 [data-theme="dark"] #panelRegister .form-section,
 [data-theme="dark"] #panelRegister .form-row {
@@ -3617,7 +3610,7 @@ html[data-theme="dark"] textarea::placeholder{
 }
 
 
-/* CHATGPT FIX - CONSULTA Y USUARIOS DARK MODE */
+
 [data-theme="dark"] #panelConsulta input,
 [data-theme="dark"] #panelConsulta select,
 [data-theme="dark"] #panelUsers input,
@@ -3644,7 +3637,7 @@ html[data-theme="dark"] textarea::placeholder{
 
 
 
-/* Recuperación de contraseña EmailJS */
+
 .forgot-modal-card{
   max-width:520px!important;
 }
@@ -3660,7 +3653,7 @@ html[data-theme="dark"] textarea::placeholder{
   color:#CBD5E1!important;
 }
 
-/* Recuperación de contraseña - limpieza final */
+
 .reset-modal-card{gap:0!important;}
 .reset-account-box{margin:14px 0 4px;padding:11px 14px;border:1px solid rgba(220,38,38,.16);background:rgba(220,38,38,.06);border-radius:14px;color:var(--text-secondary);font-size:.86rem;word-break:break-word;}
 .password-field{position:relative;display:flex;align-items:center;}
@@ -3681,7 +3674,7 @@ html[data-theme="dark"] textarea::placeholder{
 [data-theme="dark"] .password-toggle-btn{background:rgba(248,250,252,.09);color:#E5E7EB;}
 @media(max-width:520px){.reset-actions{grid-template-columns:1fr!important}.password-field input{padding-right:84px!important}.password-toggle-btn{font-size:.68rem;padding:6px 8px}.reset-modal-card{padding:22px 16px!important}}
 
-/* === OPTIMIZACION MOVIL PREMIUM PEDERNALES 66 === */
+
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
 body{overscroll-behavior-y:none;}
@@ -3946,7 +3939,7 @@ input,select,textarea{font-size:16px!important;}
 }
 
 
-/* === FIX MOVIL 71: scroll correcto + sidebar overlay === */
+
 html, body {
   min-height: 100%;
   height: auto !important;
@@ -4041,9 +4034,7 @@ body.sidebar-open .app-content {
 }
 
 
-/* =========================================================
-   FIX 72 FINAL - scroll móvil correcto + usuarios normales
-   ========================================================= */
+
 html, body{
   width:100% !important;
   max-width:100% !important;
@@ -4261,12 +4252,7 @@ body.sidebar-open .app-content{
   .users-mobile-list{display:none !important;}
 }
 
-/* =========================================================
-   FIX 73 DEFINITIVO - scroll móvil normal + sidebar overlay
-   Objetivo:
-   - Menú cerrado: la página debe bajar/subir normalmente.
-   - Menú abierto: el fondo queda fijo y solo navega el sidebar.
-   ========================================================= */
+
 @media (max-width: 860px) {
   html:not(.sidebar-open-html),
   body:not(.sidebar-open) {
@@ -4403,14 +4389,7 @@ body.sidebar-open .app-content{
 }
 
 
-/* =========================================================
-   FIX 74 REAL - scroll móvil estable como app
-   Causa detectada: el scroll estaba intentando depender del body
-   mientras varias reglas móviles dejaban contenedores en visible/hidden.
-   Solución: en móvil el contenedor que baja es .app-main.
-   - Menú cerrado: .app-main hace scroll normal.
-   - Menú abierto: .app-main se bloquea y el sidebar queda encima.
-   ========================================================= */
+
 @media (max-width: 860px) {
   html,
   body {
@@ -4542,13 +4521,7 @@ body.sidebar-open .app-content{
   }
 }
 
-/* =========================================================
-   FIX 76 REAL - preservar scroll funcional y corregir paneles
-   Problema detectado: reglas previas forzaban #usersSection a display:flex
-   aunque tuviera .section-hidden, por eso Usuarios del Sistema aparecía
-   mezclado en otros módulos. Este bloque restaura la lógica correcta:
-   solo se ve el panel activo; los demás quedan ocultos.
-   ========================================================= */
+
 .content-panel.section-hidden,
 #panelOverview.section-hidden,
 #panelRegistro.section-hidden,
@@ -4596,7 +4569,7 @@ body.sidebar-open .app-content{
   }
 }
 
-/* FIX FINAL - Botón Guardar registro en su lugar natural */
+
 #saveVoterBtn,
 body #saveVoterBtn,
 html body #panelRegistro #saveVoterBtn{
@@ -4611,7 +4584,7 @@ html body #panelRegistro #saveVoterBtn{
   box-shadow:0 14px 28px rgba(11,95,150,.18)!important;
 }
 
-/* === FIX 78: Modal recuperar contraseña - botones ordenados === */
+
 #forgotPasswordModal .modal-card{
   overflow-x:hidden !important;
 }
@@ -4674,7 +4647,7 @@ html body #panelRegistro #saveVoterBtn{
   }
 }
 
-/* === AUDITORÍA ADMINISTRADOR - sección aislada y compacta === */
+
 #auditSection.section-hidden,
 #auditSection.content-panel.section-hidden,
 #auditNavBtn.section-hidden,
@@ -4873,10 +4846,7 @@ html[data-theme="dark"] #auditSection{
 }
 
 
-/* =========================================================
-   Auditoría premium + corrección EmailJS ZIP 84
-   Ajustes aislados: no modifica lógica ni otros módulos.
-   ========================================================= */
+
 
 #auditSection{
   gap: 16px;
@@ -5025,7 +4995,7 @@ html[data-theme="dark"] #auditSection{
   border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-/* Dark mode auditoría */
+
 html[data-theme="dark"] #auditSection.card{
   background:
     radial-gradient(circle at top right, rgba(220,38,38,.13), transparent 34%),
@@ -5076,7 +5046,7 @@ html[data-theme="dark"] .audit-pill{
   color: #fca5a5 !important;
 }
 
-/* Móvil: auditoría como tarjetas compactas */
+
 @media (max-width: 760px){
   #auditSection:not(.section-hidden){
     padding: 14px !important;
@@ -5220,10 +5190,7 @@ html[data-theme="dark"] .audit-pill{
 }
 
 
-/* =========================================================
-   Auditoría - vista organizada en tabla (sin tarjetas móviles)
-   ZIP 85: ajustes aislados solo para sección de auditoría.
-   ========================================================= */
+
 #auditSection:not(.section-hidden){
   gap:14px!important;
 }
@@ -5487,10 +5454,7 @@ html[data-theme="dark"] #auditSection #auditActionFilter{
   }
 }
 
-/* =========================================================
-   ZIP 86 - Auditoría en tabla real para desktop y móvil
-   Mantiene la auditoría organizada, sin tarjetas por fila.
-   ========================================================= */
+
 #auditSection .audit-table-wrap{
   width:100%!important;
   max-width:100%!important;
@@ -5724,7 +5688,7 @@ html[data-theme="dark"] #auditSection #auditTableBody tr:hover td{
 }
 
 
-/* === ZIP 87 FINAL RESPONSIVE + PWA SAFE OVERRIDES === */
+
 html{
   -webkit-text-size-adjust:100%;
   text-size-adjust:100%;
@@ -5967,7 +5931,7 @@ input,select,textarea{
   .topbar{padding-top:calc(8px + env(safe-area-inset-top))!important;}
 }
 
-/* Ajustes finales de responsividad y escala general - junio 2026 */
+
 html, body {
   min-height: 100%;
   overflow-x: hidden !important;
@@ -6249,7 +6213,7 @@ body {
   }
 }
 
-/* Ajuste exclusivo del login en móvil: permite subir/bajar sin afectar el panel interno */
+
 @media (max-width: 760px) {
   #authSection:not(.hidden) {
     display: block !important;
@@ -6386,9 +6350,7 @@ body {
   }
 }
 
-/* =========================================================
-   FIX 90 DEFINITIVO - solo móvil: login con scroll real y header fijo
-   ========================================================= */
+
 @media (max-width: 860px) {
   html,
   body {
@@ -6515,10 +6477,7 @@ body {
 }
 
 
-/* =========================================================
-   FIX 91 RESPONSIVO - login con footer y dashboard con header fijo real
-   Solo corrige comportamiento móvil del login y del scroll del dashboard.
-   ========================================================= */
+
 @media (max-width: 860px) {
   html,
   body {
@@ -6681,7 +6640,7 @@ body {
   }
 }
 
-/* === FIX DEFINITIVO HEADER MOVIL === */
+
 @media (max-width: 768px){
   html,
   body{
@@ -6765,7 +6724,7 @@ body {
   }
 }
 
-/* === FIX RESPONSIVO DEFINITIVO: HEADER MÓVIL FIJO + MENÚ SOBRE EL HEADER === */
+
 @media (max-width: 640px) {
   html,
   body {
@@ -6840,7 +6799,7 @@ body {
 }
 
 
-/* === FIX JOSE 99: recuperación responsive + auditoría dark === */
+
 #resetPasswordModal .reset-modal-card{
   width:min(460px, calc(100vw - 28px)) !important;
   max-width:460px !important;
@@ -7031,7 +6990,7 @@ html[data-theme="dark"] #auditActionFilter option{
 }
 
 
-/* Fix texto buscador modo oscuro */
+
 [data-theme="dark"] .topbar-search input{
   color:#F9FAFB !important;
 }
@@ -7040,7 +6999,7 @@ html[data-theme="dark"] #auditActionFilter option{
   opacity:1;
 }
 
-/* Corrección final: texto del buscador superior en modo oscuro */
+
 html[data-theme="dark"] #topbarSearchInput,
 html[data-theme="dark"] .topbar-search #topbarSearchInput,
 html[data-theme="dark"] .topbar-search input[type="search"]{
@@ -7058,7 +7017,7 @@ html[data-theme="dark"] .topbar-search input[type="search"]::placeholder{
 }
 
 
-/* === FIX JOSE 104: scroll con rueda del mouse en dashboard desktop === */
+
 @media (min-width: 769px){
   body:not(.auth-active) #dashboardSection:not(.hidden){
     height: 100vh !important;
@@ -7078,4 +7037,223 @@ html[data-theme="dark"] .topbar-search input[type="search"]::placeholder{
   body:not(.auth-active) #dashboardSection:not(.hidden) .app-content{
     overflow: visible !important;
   }
+}
+
+
+/* Premium Nuevo Registro */
+#panelRegister .input-group label{
+  font-size:1rem;
+  font-weight:700;
+  color:#334e68;
+  margin-bottom:6px;
+}
+#panelRegister .input-group input,
+#panelRegister .input-group select,
+#panelRegister .input-group textarea{
+  min-height:72px;
+  border-radius:24px;
+  border:2px solid rgba(201,169,129,.35);
+  background:#fcfbf8;
+  font-size:1.05rem;
+  font-weight:600;
+  box-shadow:0 4px 12px rgba(0,0,0,.04);
+}
+#panelRegister .input-group input::placeholder,
+#panelRegister .input-group textarea::placeholder{
+  color:#8b8b8b;
+  font-weight:600;
+}
+#panelRegister .input-group input:focus,
+#panelRegister .input-group select:focus,
+#panelRegister .input-group textarea:focus{
+  border-color:#c99558;
+  box-shadow:0 0 0 4px rgba(201,149,88,.15);
+}
+[data-theme="dark"] #panelRegister .input-group label{
+  color:#d7e3f1;
+}
+[data-theme="dark"] #panelRegister .input-group input,
+[data-theme="dark"] #panelRegister .input-group select,
+[data-theme="dark"] #panelRegister .input-group textarea{
+  background:rgba(15,23,42,.78);
+  color:#f8fafc;
+  border:1.5px solid rgba(107,143,138,.45);
+  box-shadow:0 8px 20px rgba(0,0,0,.22);
+}
+[data-theme="dark"] #panelRegister .input-group input::placeholder,
+[data-theme="dark"] #panelRegister .input-group textarea::placeholder{
+  color:#b7c3d4;
+}
+[data-theme="dark"] #panelRegister .input-group input:focus,
+[data-theme="dark"] #panelRegister .input-group select:focus,
+[data-theme="dark"] #panelRegister .input-group textarea:focus{
+  background:rgba(17,34,52,.95);
+  border-color:#6b8f8a;
+  box-shadow:0 0 0 4px rgba(107,143,138,.18);
+}
+#panelRegistro #voterForm .input-group label{
+  color:#263B52!important;
+  font-size:.94rem!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+}
+#panelRegistro #voterForm .input-group input,
+#panelRegistro #voterForm .input-group select,
+#panelRegistro #voterForm .input-group textarea{
+  background:linear-gradient(180deg,#FFFFFF 0%,#FBF8F4 100%)!important;
+  color:#111827!important;
+  border:1.6px solid #D8C8B5!important;
+  border-radius:18px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 12px 28px rgba(31,41,55,.055)!important;
+  caret-color:#B8895B!important;
+}
+#panelRegistro #voterForm .input-group input::placeholder,
+#panelRegistro #voterForm .input-group textarea::placeholder{
+  color:transparent!important;
+  opacity:0!important;
+}
+#panelRegistro #voterForm .input-group select:invalid{
+  color:transparent!important;
+}
+#panelRegistro #voterForm .input-group input:hover,
+#panelRegistro #voterForm .input-group select:hover,
+#panelRegistro #voterForm .input-group textarea:hover{
+  border-color:#B8895B!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 14px 32px rgba(184,137,91,.10)!important;
+}
+#panelRegistro #voterForm .input-group input:focus,
+#panelRegistro #voterForm .input-group select:focus,
+#panelRegistro #voterForm .input-group textarea:focus{
+  background:#FFFFFF!important;
+  color:#111827!important;
+  border-color:#B8895B!important;
+  box-shadow:0 0 0 4px rgba(184,137,91,.16),0 16px 36px rgba(31,41,55,.08)!important;
+  outline:none!important;
+}
+#panelRegistro #voterForm .input-group select option{
+  color:#111827!important;
+  background:#FFFFFF!important;
+}
+#panelRegistro #voterForm .input-group textarea{
+  min-height:108px!important;
+  resize:vertical!important;
+}
+[data-theme="dark"] #panelRegistro .form-card{
+  background:linear-gradient(145deg,#0F2028 0%,#102D35 100%)!important;
+  border-color:rgba(148,163,184,.20)!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group label{
+  color:#E6EEF7!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group input,
+[data-theme="dark"] #panelRegistro #voterForm .input-group select,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea{
+  background:linear-gradient(180deg,#152732 0%,#0F1E27 100%)!important;
+  color:#F8FAFC!important;
+  border-color:rgba(231,198,167,.36)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 32px rgba(0,0,0,.18)!important;
+  caret-color:#E7C6A7!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group input::placeholder,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea::placeholder{
+  color:transparent!important;
+  opacity:0!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group select:invalid{
+  color:transparent!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group input:hover,
+[data-theme="dark"] #panelRegistro #voterForm .input-group select:hover,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:hover{
+  border-color:#E7C6A7!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 16px 36px rgba(0,0,0,.24)!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group input:focus,
+[data-theme="dark"] #panelRegistro #voterForm .input-group select:focus,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:focus{
+  background:#172C36!important;
+  color:#FFFFFF!important;
+  border-color:#E7C6A7!important;
+  box-shadow:0 0 0 4px rgba(231,198,167,.16),0 18px 40px rgba(0,0,0,.28)!important;
+  outline:none!important;
+}
+[data-theme="dark"] #panelRegistro #voterForm .input-group select option{
+  color:#F8FAFC!important;
+  background:#111827!important;
+}
+
+
+.dark-mode #voterForm input,
+.dark-mode #voterForm select,
+.dark-mode .voter-form input,
+.dark-mode .voter-form select{
+background:#0f172a !important;
+color:#f8fafc !important;
+border:1px solid rgba(220,38,38,.25) !important;
+}
+
+.dark-mode #voterForm label,
+.dark-mode .voter-form label{
+color:#e5e7eb !important;
+font-weight:700;
+}
+
+.dark-mode #voterForm option{
+background:#0f172a;
+color:#f8fafc;
+}
+
+#panelRegistro #voterForm .input-group input,
+#panelRegistro #voterForm .input-group select,
+#panelRegistro #voterForm .input-group textarea{
+  color:#111827!important;
+  -webkit-text-fill-color:#111827!important;
+}
+
+[data-theme="dark"] #panelRegistro #voterForm .input-group input,
+[data-theme="dark"] #panelRegistro #voterForm .input-group select,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea,
+body[data-theme="dark"] #panelRegistro #voterForm .input-group input,
+body[data-theme="dark"] #panelRegistro #voterForm .input-group select,
+body[data-theme="dark"] #panelRegistro #voterForm .input-group textarea,
+html[data-theme="dark"] #panelRegistro #voterForm .input-group input,
+html[data-theme="dark"] #panelRegistro #voterForm .input-group select,
+html[data-theme="dark"] #panelRegistro #voterForm .input-group textarea{
+  background:linear-gradient(180deg,#152732 0%,#0F1E27 100%)!important;
+  color:#F8FAFC!important;
+  -webkit-text-fill-color:#F8FAFC!important;
+  border:1.6px solid rgba(231,198,167,.42)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 32px rgba(0,0,0,.20)!important;
+  caret-color:#E7C6A7!important;
+}
+
+[data-theme="dark"] #panelRegistro #voterForm .input-group input:-webkit-autofill,
+[data-theme="dark"] #panelRegistro #voterForm .input-group select:-webkit-autofill,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:-webkit-autofill,
+body[data-theme="dark"] #panelRegistro #voterForm .input-group input:-webkit-autofill,
+body[data-theme="dark"] #panelRegistro #voterForm .input-group select:-webkit-autofill,
+body[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:-webkit-autofill,
+html[data-theme="dark"] #panelRegistro #voterForm .input-group input:-webkit-autofill,
+html[data-theme="dark"] #panelRegistro #voterForm .input-group select:-webkit-autofill,
+html[data-theme="dark"] #panelRegistro #voterForm .input-group textarea:-webkit-autofill{
+  -webkit-box-shadow:0 0 0 1000px #152732 inset!important;
+  -webkit-text-fill-color:#F8FAFC!important;
+  caret-color:#E7C6A7!important;
+  border-color:rgba(231,198,167,.42)!important;
+}
+
+[data-theme="dark"] #panelRegistro #voterForm .input-group input::placeholder,
+[data-theme="dark"] #panelRegistro #voterForm .input-group textarea::placeholder{
+  color:transparent!important;
+  opacity:0!important;
+}
+
+[data-theme="dark"] #panelRegistro #voterForm .input-group select option{
+  background:#0F1E27!important;
+  color:#F8FAFC!important;
+  -webkit-text-fill-color:#F8FAFC!important;
+}
+
+[data-theme="dark"] #panelRegistro #voterForm .input-group label{
+  color:#EAF2FA!important;
 }

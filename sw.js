@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pedernales-primero-v87-final-responsive';
+const CACHE_NAME = 'pedernales-primero-v117-registro-dark-final';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=87-final-responsive',
-  './script.js?v=87-final-responsive',
+  './styles.css?v=113-merge-final',
+  './script.js?v=113-merge-final',
   './manifest.json',
   './pwa.js',
   './Logos/logo-pedernales.png',
@@ -47,22 +47,34 @@ self.addEventListener('activate', function (event) {
 self.addEventListener('fetch', function (event) {
   const request = event.request;
   const url = new URL(request.url);
+
   if (request.method !== 'GET') return;
   if (url.origin !== self.location.origin) return;
-  if (request.mode === 'navigate') {
+
+  const isFreshFile =
+    request.mode === 'navigate' ||
+    url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/script.js') ||
+    url.pathname.endsWith('/styles.css') ||
+    url.search.includes('v=112-audit-final');
+
+  if (isFreshFile) {
     event.respondWith(
       fetch(request).then(function (response) {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(function (cache) {
-          cache.put('./index.html', copy);
+          cache.put(request, copy);
         });
         return response;
       }).catch(function () {
-        return caches.match('./index.html');
+        return caches.match(request).then(function (cached) {
+          return cached || caches.match('./index.html');
+        });
       })
     );
     return;
   }
+
   event.respondWith(
     caches.match(request).then(function (cached) {
       return cached || fetch(request).then(function (response) {

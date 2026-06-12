@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=94-header-mobile-fixed-menu-over" />
+  <link rel="stylesheet" href="styles.css?v=117-registro-dark-final" />
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" defer></script>
 </head>
 <body>
@@ -369,27 +369,27 @@
               <div class="grid-2">
                 <div class="input-group">
                   <label for="voterName">Nombre completo</label>
-                  <input type="text" id="voterName" placeholder="Nombre y Apellido" required autocomplete="off" />
+                  <input type="text" id="voterName" required autocomplete="off" />
                 </div>
                 <div class="input-group">
                   <label for="voterCedula">Cédula</label>
-                  <input type="text" id="voterCedula" placeholder="000-0000000-0" required inputmode="numeric" />
+                  <input type="text" id="voterCedula" required inputmode="numeric" />
                 </div>
               </div>
 
               <div class="grid-3">
                 <div class="input-group">
                   <label for="voterPhone">Teléfono</label>
-                  <input type="text" id="voterPhone" placeholder="809-000-0000" required inputmode="tel" />
+                  <input type="text" id="voterPhone" required inputmode="tel" />
                 </div>
                 <div class="input-group">
                   <label for="voterAge">Edad</label>
-                  <input type="number" id="voterAge" min="1" max="120" placeholder="Edad" required />
+                  <input type="number" id="voterAge" min="1" max="120" required />
                 </div>
                 <div class="input-group">
                   <label for="voterMunicipio">Municipio</label>
                   <select id="voterMunicipio" required>
-                    <option value="">Seleccione</option>
+                    <option value=""></option>
                   </select>
                 </div>
               </div>
@@ -398,30 +398,30 @@
                 <div class="input-group">
                   <label for="voterDistrict">Distrito municipal</label>
                   <select id="voterDistrict" required>
-                    <option value="">Seleccione</option>
+                    <option value=""></option>
                   </select>
                 </div>
                 <div class="input-group">
                   <label for="voterZone">Zona</label>
-                  <input type="text" id="voterZone" required placeholder="Ej. Zona 1" />
+                  <input type="text" id="voterZone" required />
                 </div>
                 <div class="input-group">
                   <label for="voterRecinto">Recinto</label>
-                  <input type="text" id="voterRecinto" required placeholder="Escuela"  />
+                  <input type="text" id="voterRecinto" required  />
                 </div>
                 <div class="input-group">
                   <label for="voterColegio">Mesa Electoral</label>
-                  <input type="text" id="voterColegio" required placeholder="Numero de Mesa" />
+                  <input type="text" id="voterColegio" required />
                 </div>
               </div>
 
               <div class="input-group">
                 <label for="voterAddress">Dirección</label>
-                <input type="text" id="voterAddress" required placeholder="Dirección de residencia" />
+                <input type="text" id="voterAddress" required />
               </div>
               <div class="input-group">
                 <label for="voterObservation">Observación</label>
-                <textarea id="voterObservation" rows="3" placeholder="Condición o nota relevante sobre la persona"></textarea>
+                <textarea id="voterObservation" rows="3"></textarea>
               </div>
 
               <button type="submit" class="primary-btn" id="saveVoterBtn" style="margin-top: 12px;">
@@ -831,6 +831,6 @@
 
 <script src="pwa.js?v=4" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="script.js?v=87-final-responsive" defer></script>
+<script src="script.js?v=115-registro-final" defer></script>
 </body>
 </html>

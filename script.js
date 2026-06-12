@@ -51,6 +51,7 @@ async function supabaseRequest(table, options = {}){
   const url = `${SUPABASE_CONFIG.url}/rest/v1/${table}${options.query || ''}`;
   const response = await fetch(url, { method: options.method || 'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined });
   if(!response.ok){
+    if(Array.isArray(options.ignoreStatuses) && options.ignoreStatuses.includes(response.status)) return null;
     const text = await response.text().catch(()=>'');
     throw new Error(`Supabase ${table}: ${response.status} ${text}`);
   }
@@ -60,6 +61,49 @@ async function supabaseRequest(table, options = {}){
 }
 function prepareSupabaseRows(key, rows){
   const list = Array.isArray(rows) ? rows : [];
+  if(key === DB.users){
+    return list.map(u => ({
+      id: u.id || uid(),
+      name: u.name || '',
+      username: u.username || '',
+      email: u.email || '',
+      phone: u.phone || '',
+      role: u.role || '',
+      province: u.province || PROVINCE,
+      municipio: u.municipio || '',
+      district: u.district || u.municipio || '',
+      zone: u.zone || '',
+      recommended_by_id: u.recommended_by_id || '',
+      recommended_by_name: u.recommended_by_name || '',
+      recommended_by_role: u.recommended_by_role || '',
+      status: u.status || 'Pendiente',
+      password_hash: u.password_hash || '',
+      created_at: u.created_at || new Date().toISOString(),
+      updated_at: u.updated_at || null
+    }));
+  }
+  if(key === DB.voters){
+    return list.map(v => ({
+      id: v.id || uid(),
+      name: v.name || '',
+      cedula: v.cedula || '',
+      phone: v.phone || '',
+      age: v.age || '',
+      address: v.address || '',
+      province: v.province || PROVINCE,
+      municipio: v.municipio || '',
+      district: v.district || v.municipio || '',
+      zone: v.zone || '',
+      recinto: v.recinto || '',
+      colegio: v.colegio || '',
+      observation: v.observation || '',
+      registered_by_id: v.registered_by_id || '',
+      registered_by_name: v.registered_by_name || '',
+      registered_by_role: v.registered_by_role || '',
+      created_at: v.created_at || new Date().toISOString(),
+      updated_at: v.updated_at || null
+    }));
+  }
   if(key === DB.audit){
     return list.map(a => ({
       id: a.id || uid(),
@@ -87,11 +131,32 @@ async function syncSupabaseTable(key, rows){
   if(!table) return;
   try{
     const prepared = prepareSupabaseRows(key, rows);
+
     if(prepared.length){
-      await supabaseRequest(table, { method: 'POST', query: '?on_conflict=id', prefer: 'resolution=merge-duplicates,return=minimal', body: prepared });
+      for(const row of prepared){
+        if(key === DB.audit){
+          await supabaseRequest(table, {
+            method: 'POST',
+            prefer: 'return=minimal',
+            body: row,
+            ignoreStatuses: [409]
+          });
+        }else{
+          await supabaseRequest(table, {
+            method: 'POST',
+            query: '?on_conflict=id',
+            prefer: 'resolution=merge-duplicates,return=minimal',
+            body: row
+          });
+        }
+      }
+
       if(key !== DB.audit){
         const ids = prepared.map(x => String(x.id)).filter(Boolean);
-        await supabaseRequest(table, { method: 'DELETE', query: ids.length ? `?id=not.in.(${ids.join(',')})` : '?id=not.is.null' });
+        if(ids.length){
+          const safeIds = ids.map(id => `"${encodeURIComponent(id)}"`).join(',');
+          await supabaseRequest(table, { method: 'DELETE', query: `?id=not.in.(${safeIds})` });
+        }
       }
     }else if(key !== DB.audit){
       await supabaseRequest(table, { method: 'DELETE', query: '?id=not.is.null' });
@@ -100,14 +165,45 @@ async function syncSupabaseTable(key, rows){
     console.error('Error sincronizando Supabase:', error);
   }
 }
+
+async function insertSupabaseAudit(row){
+  if(!supabaseReady) return;
+  try{
+    const prepared = prepareSupabaseRows(DB.audit, [row])[0];
+    if(!prepared) return;
+    await supabaseRequest(SUPABASE_TABLES[DB.audit], {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: prepared,
+      ignoreStatuses: [409]
+    });
+  }catch(error){
+    console.error('Error guardando auditoría en Supabase:', error);
+  }
+}
 async function loadSupabaseTable(key){
   const table = SUPABASE_TABLES[key];
   if(!table) return;
   const order = key === DB.audit ? 'created_at.desc' : 'created_at.asc';
   const remote = await supabaseRequest(table, { query: `?select=*&order=${order}` });
   const local = read(key);
-  if(Array.isArray(remote) && remote.length){
-    writeLocal(key, normalizeSupabaseRows(key, remote));
+  const remoteRows = normalizeSupabaseRows(key, Array.isArray(remote) ? remote : []);
+
+  if(key === DB.audit){
+    const mergedMap = new Map();
+    [...local, ...remoteRows].forEach(row => {
+      if(row && row.id) mergedMap.set(String(row.id), row);
+    });
+    const merged = Array.from(mergedMap.values()).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,1500);
+    writeLocal(key, merged);
+    const remoteIds = new Set(remoteRows.map(row => String(row.id)));
+    const pending = merged.filter(row => row && row.id && !remoteIds.has(String(row.id)));
+    if(pending.length) await syncSupabaseTable(key, pending);
+    return;
+  }
+
+  if(remoteRows.length){
+    writeLocal(key, remoteRows);
   }else if(local.length){
     await syncSupabaseTable(key, local);
   }else{
@@ -152,9 +248,11 @@ function auditType(action){
 }
 function addAudit(action,module,detail='',actor=null){
   const u=actor||currentUser;
+  const log={id:uid(),created_at:new Date().toISOString(),user_id:u?.id||'',user_name:u?.name||'Sistema',user_role:u?.role||'',username:u?.username||'',action,kind:auditType(action),module,detail:String(detail||''),agent:navigator.userAgent};
   const logs=read(DB.audit);
-  logs.unshift({id:uid(),created_at:new Date().toISOString(),user_id:u?.id||'',user_name:u?.name||'Sistema',user_role:u?.role||'',username:u?.username||'',action,kind:auditType(action),module,detail:String(detail||''),agent:navigator.userAgent});
-  write(DB.audit,logs.slice(0,1500));
+  logs.unshift(log);
+  writeLocal(DB.audit,logs.slice(0,1500));
+  insertSupabaseAudit(log);
 }
 function filteredAudit(){
   const q=clean($('auditSearchInput')?.value).toLowerCase();
@@ -269,7 +367,7 @@ function approvedUsers(){return read(DB.users).filter(u=>u.status==='Aprobado')}
 function fillRecommendedSelect(el, selected=''){if(!el)return; const users=approvedUsers(); el.innerHTML='<option value="">Sin recomendador</option>'+users.map(u=>`<option value="${u.id}">${escapeHtml(u.name)} · ${escapeHtml(u.role)}</option>`).join(''); if([...el.options].some(o=>o.value===selected))el.value=selected;}
 function districtValues(m=''){return m&&DISTRITOS[m]?DISTRITOS[m]:DEMARCACIONES}
 function fillDistrictSelect(el, municipio='', label='Seleccione'){fillSelect(el,districtValues(municipio),label)}
-function initSelects(){fillSelect($('registerRole'),ROLES,'Seleccione'); fillSelect($('editUserRole'),ROLES,'Seleccione'); fillSelect($('userRoleFilter'),ROLES,'Todos los roles'); fillSelect($('registerMunicipio'),MUNICIPIOS,'Seleccione'); fillSelect($('editUserMunicipio'),MUNICIPIOS,'Seleccione'); fillSelect($('voterMunicipio'),MUNICIPIOS,'Seleccione'); fillSelect($('filterMunicipio'),MUNICIPIOS,'Todos'); fillSelect($('filterRole'),ROLES,'Todos'); fillDistrictSelect($('registerDistrict'),$('registerMunicipio')?.value,'Seleccione'); fillDistrictSelect($('editUserDistrict'),$('editUserMunicipio')?.value,'Seleccione'); fillDistrictSelect($('voterDistrict'),$('voterMunicipio')?.value,'Seleccione'); fillSelect($('filterDistrict'),DEMARCACIONES,'Todas'); fillRecommendedSelect($('registerRecommendedBy')); fillRecommendedSelect($('editUserRecommendedBy')); firstAdminMode();}
+function initSelects(){fillSelect($('registerRole'),ROLES,'Seleccione'); fillSelect($('editUserRole'),ROLES,'Seleccione'); fillSelect($('userRoleFilter'),ROLES,'Todos los roles'); fillSelect($('registerMunicipio'),MUNICIPIOS,'Seleccione'); fillSelect($('editUserMunicipio'),MUNICIPIOS,'Seleccione'); fillSelect($('voterMunicipio'),MUNICIPIOS,'Seleccione'); fillSelect($('filterMunicipio'),MUNICIPIOS,'Todos'); fillSelect($('filterRole'),ROLES,'Todos'); fillDistrictSelect($('registerDistrict'),$('registerMunicipio')?.value,'Seleccione'); fillDistrictSelect($('editUserDistrict'),$('editUserMunicipio')?.value,'Seleccione'); fillDistrictSelect($('voterDistrict'),$('voterMunicipio')?.value,''); fillSelect($('filterDistrict'),DEMARCACIONES,'Todas'); fillRecommendedSelect($('registerRecommendedBy')); fillRecommendedSelect($('editUserRecommendedBy')); firstAdminMode();}
 function firstAdminMode(){const first=read(DB.users).length===0; if($('registerRole')){$('registerRole').disabled=first; if(first)$('registerRole').value='Administrador'} if($('firstUserHint'))$('firstUserHint').textContent=first?'Cree el primer administrador para iniciar el sistema.':'Los usuarios nuevos deben ser aprobados por el administrador.';}
 
 function openForgotPasswordModal(){
@@ -649,7 +747,7 @@ function renderUsersTable(){
   }
 }
 function renderAll(){updateDynamicFilters(); renderStats(); renderChart(); renderRanking(); renderSearchCards(); renderVotersTable(); renderUsersTable(); renderAudit();}
-function resetVoterForm(){if(!$('voterForm'))return; $('voterForm').reset(); $('editingVoterId').value=''; $('voterFormTitle').textContent='Registrar votante / simpatizante'; $('saveVoterBtn').lastChild.textContent=' Guardar registro'; $('cancelEditVoterBtn')?.classList.add('hidden'); if($('voterZone')){$('voterZone').readOnly=false;} if($('voterMunicipio')){$('voterMunicipio').disabled=false;} if($('voterDistrict')){$('voterDistrict').disabled=false;} fillSelect($('voterMunicipio'),MUNICIPIOS,'Seleccione'); fillDistrictSelect($('voterDistrict'),$('voterMunicipio')?.value,'Seleccione'); if(isZone()&&currentUser.zone){$('voterZone').value=currentUser.zone; $('voterZone').readOnly=true;} if(isZone()&&currentUser.municipio){$('voterMunicipio').value=currentUser.municipio; fillDistrictSelect($('voterDistrict'),currentUser.municipio,'Seleccione');} if(isZone()&&currentUser.district){$('voterDistrict').value=currentUser.district;} }
+function resetVoterForm(){if(!$('voterForm'))return; $('voterForm').reset(); $('editingVoterId').value=''; $('voterFormTitle').textContent='Registrar votante / simpatizante'; $('saveVoterBtn').lastChild.textContent=' Guardar registro'; $('cancelEditVoterBtn')?.classList.add('hidden'); if($('voterZone')){$('voterZone').readOnly=false;} if($('voterMunicipio')){$('voterMunicipio').disabled=false;} if($('voterDistrict')){$('voterDistrict').disabled=false;} fillSelect($('voterMunicipio'),MUNICIPIOS,'Seleccione'); fillDistrictSelect($('voterDistrict'),$('voterMunicipio')?.value,''); if(isZone()&&currentUser.zone){$('voterZone').value=currentUser.zone; $('voterZone').readOnly=true;} if(isZone()&&currentUser.municipio){$('voterMunicipio').value=currentUser.municipio; fillDistrictSelect($('voterDistrict'),currentUser.municipio,'Seleccione');} if(isZone()&&currentUser.district){$('voterDistrict').value=currentUser.district;} }
 function editVoter(id){const v=read(DB.voters).find(x=>x.id===id); if(!v||!canEditVoter(v))return; $('editingVoterId').value=v.id; $('voterName').value=v.name; $('voterCedula').value=v.cedula; $('voterPhone').value=v.phone; $('voterAge').value=v.age; $('voterAddress').value=v.address; $('voterMunicipio').value=v.municipio; fillDistrictSelect($('voterDistrict'),v.municipio,'Seleccione'); $('voterDistrict').value=v.district||v.municipio||''; $('voterZone').value=v.zone; $('voterRecinto').value=v.recinto; $('voterColegio').value=v.colegio; $('voterObservation').value=v.observation||''; $('voterFormTitle').textContent='Editar registro'; $('saveVoterBtn').lastChild.textContent=' Actualizar registro'; $('cancelEditVoterBtn')?.classList.remove('hidden'); setPanel('registro'); window.scrollTo({top:0,behavior:'smooth'});}
 function deleteVoter(id){const voters=read(DB.voters); const v=voters.find(x=>x.id===id); if(!v||!canEditVoter(v))return; if(!confirm('¿Deseas eliminar este registro?'))return; write(DB.voters,voters.filter(x=>x.id!==id)); addAudit('Registro eliminado','Registros',`${v.name||'Sin nombre'} · ${v.cedula||''}`); renderAll();}
 function openUserModal(id){const u=read(DB.users).find(x=>x.id===id); if(!u||!isAdmin())return; $('editUserId').value=u.id; $('editUserName').value=u.name; $('editUserUsername').value=u.username; $('editUserEmail').value=u.email; $('editUserPhone').value=u.phone; $('editUserRole').value=u.role; $('editUserMunicipio').value=u.municipio||''; fillDistrictSelect($('editUserDistrict'),u.municipio||'','Seleccione'); $('editUserDistrict').value=u.district||u.municipio||''; $('editUserZone').value=u.zone||''; fillRecommendedSelect($('editUserRecommendedBy'),u.recommended_by_id||''); $('userEditModal').classList.remove('hidden');}
