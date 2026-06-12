@@ -18,13 +18,116 @@ const EMAILJS_CONFIG = {
   adminEmail: 'pedernalesprimero@hotmail.com',
   appUrl: 'https://josephperez16.github.io/Pedernales-Primero/'
 };
+
+const SUPABASE_CONFIG = {
+  url: 'https://wbfbyyybktovqahoeqtu.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiZmJ5eXlia3RvdnFhaG9lcXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTY0NzgsImV4cCI6MjA5Njc5MjQ3OH0.ypSUPoYFWtLnA-5MROIqMWzf6Bu730Noipx0VIDinuA'
+};
+const SUPABASE_TABLES = {
+  [DB.users]: 'pp_users',
+  [DB.voters]: 'pp_voters',
+  [DB.audit]: 'pp_audit_logs'
+};
+let supabaseReady = false;
+let supabaseSyncing = false;
 let currentUser = null;
 let chartHoverIndex = -1;
 let chartAreas = [];
 window.getSession = () => currentUser;
 const $ = id => document.getElementById(id);
 const read = key => JSON.parse(localStorage.getItem(key) || '[]');
-const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+const writeLocal = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+const write = (key, value) => {
+  writeLocal(key, value);
+  if (SUPABASE_TABLES[key] && supabaseReady && !supabaseSyncing) syncSupabaseTable(key, value);
+};
+async function supabaseRequest(table, options = {}){
+  const headers = {
+    apikey: SUPABASE_CONFIG.key,
+    Authorization: `Bearer ${SUPABASE_CONFIG.key}`,
+    'Content-Type': 'application/json',
+    Prefer: options.prefer || 'return=minimal'
+  };
+  const url = `${SUPABASE_CONFIG.url}/rest/v1/${table}${options.query || ''}`;
+  const response = await fetch(url, { method: options.method || 'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined });
+  if(!response.ok){
+    const text = await response.text().catch(()=>'');
+    throw new Error(`Supabase ${table}: ${response.status} ${text}`);
+  }
+  if(response.status === 204) return null;
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+function prepareSupabaseRows(key, rows){
+  const list = Array.isArray(rows) ? rows : [];
+  if(key === DB.audit){
+    return list.map(a => ({
+      id: a.id || uid(),
+      action: a.action || '',
+      module: a.module || '',
+      detail: String(a.detail || ''),
+      user_id: a.user_id || '',
+      user_name: a.user_name || 'Sistema',
+      user_role: a.user_role || '',
+      username: a.username || '',
+      created_at: a.created_at || new Date().toISOString()
+    }));
+  }
+  return list.map(row => ({...row}));
+}
+function normalizeSupabaseRows(key, rows){
+  const list = Array.isArray(rows) ? rows : [];
+  if(key === DB.audit) return list.map(a => ({...a, kind: a.kind || auditType(a.action), agent: a.agent || ''}));
+  if(key === DB.users) return list.map(u => ({...u, district: u.district || u.municipio || '', recommended_by_id: u.recommended_by_id || '', recommended_by_name: u.recommended_by_name || '', recommended_by_role: u.recommended_by_role || ''}));
+  if(key === DB.voters) return list.map(v => ({...v, district: v.district || v.municipio || ''}));
+  return list;
+}
+async function syncSupabaseTable(key, rows){
+  const table = SUPABASE_TABLES[key];
+  if(!table) return;
+  try{
+    const prepared = prepareSupabaseRows(key, rows);
+    if(prepared.length){
+      await supabaseRequest(table, { method: 'POST', query: '?on_conflict=id', prefer: 'resolution=merge-duplicates,return=minimal', body: prepared });
+      if(key !== DB.audit){
+        const ids = prepared.map(x => String(x.id)).filter(Boolean);
+        await supabaseRequest(table, { method: 'DELETE', query: ids.length ? `?id=not.in.(${ids.join(',')})` : '?id=not.is.null' });
+      }
+    }else if(key !== DB.audit){
+      await supabaseRequest(table, { method: 'DELETE', query: '?id=not.is.null' });
+    }
+  }catch(error){
+    console.error('Error sincronizando Supabase:', error);
+  }
+}
+async function loadSupabaseTable(key){
+  const table = SUPABASE_TABLES[key];
+  if(!table) return;
+  const order = key === DB.audit ? 'created_at.desc' : 'created_at.asc';
+  const remote = await supabaseRequest(table, { query: `?select=*&order=${order}` });
+  const local = read(key);
+  if(Array.isArray(remote) && remote.length){
+    writeLocal(key, normalizeSupabaseRows(key, remote));
+  }else if(local.length){
+    await syncSupabaseTable(key, local);
+  }else{
+    writeLocal(key, []);
+  }
+}
+async function loadSupabaseData(){
+  try{
+    supabaseSyncing = true;
+    await loadSupabaseTable(DB.users);
+    await loadSupabaseTable(DB.voters);
+    await loadSupabaseTable(DB.audit);
+    supabaseReady = true;
+  }catch(error){
+    console.error('No se pudo cargar Supabase. Se usará respaldo local:', error);
+    supabaseReady = false;
+  }finally{
+    supabaseSyncing = false;
+  }
+}
 const clean = v => String(v || '').trim();
 const digits = v => String(v || '').replace(/\D/g, '');
 const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
@@ -730,7 +833,7 @@ function searchSummaryHtml(data){
     </div>
   </div>`;
 }
-function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['auditSearchInput','auditActionFilter'].forEach(id=>$(id)?.addEventListener('input',renderAudit)); $('exportAuditBtn')?.addEventListener('click',exportAudit); $('clearAuditBtn')?.addEventListener('click',()=>{if(!isAdmin())return; if(confirm('¿Deseas limpiar el historial de auditoría local? Esta acción solo conserva el evento de limpieza.')){addAudit('Auditoría limpiada','Auditoría','El administrador limpió el historial local'); write(DB.audit,read(DB.audit).slice(0,1)); renderAudit();}}); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('closeResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('cancelResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('resetPasswordModal')?.addEventListener('click',e=>{if(e.target===$('resetPasswordModal'))closeResetPasswordModal();}); ['resetPassword','resetPasswordConfirm'].forEach(id=>$(id)?.addEventListener('input',updateResetPasswordUi)); document.querySelectorAll('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=$(btn.dataset.togglePassword); if(!input)return; const visible=input.type==='text'; input.type=visible?'password':'text'; btn.textContent=visible?'Mostrar':'Ocultar'; btn.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');})); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('resetPasswordModal')?.classList.contains('hidden'))closeResetPasswordModal();}); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
+function bindEvents(){ $('showLogin')?.addEventListener('click',()=>showAuthTab('login')); $('showRegister')?.addEventListener('click',()=>showAuthTab('register')); $('logoutBtn')?.addEventListener('click',logout); $('sidebarToggleBtn')?.addEventListener('click',()=>{$('appSidebar')?.classList.contains('open')?closeSidebar():openSidebar();}); $('sidebarOverlay')?.addEventListener('click',closeSidebar); bindChartEvents(); document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>setPanel(b.dataset.panel))); document.querySelectorAll('.nav-group-header').forEach(h=>h.addEventListener('click',()=>{h.classList.toggle('open'); const g=$(h.dataset.target); if(g)g.classList.toggle('collapsed')})); $('themeToggleBtn')?.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; localStorage.setItem(DB.theme,next); renderAll();}); ['voterCedula'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatCedula(e.target.value))); ['voterPhone','registerPhone','editUserPhone'].forEach(id=>$(id)?.addEventListener('input',e=>e.target.value=formatPhone(e.target.value))); $('topbarSearchInput')?.addEventListener('input',e=>{if($('searchInput'))$('searchInput').value=e.target.value; setPanel('consulta'); renderAll();}); ['searchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['userSearchInput','userRoleFilter','userStatusFilter'].forEach(id=>$(id)?.addEventListener('input',renderAll)); ['auditSearchInput','auditActionFilter'].forEach(id=>$(id)?.addEventListener('input',renderAudit)); $('exportAuditBtn')?.addEventListener('click',exportAudit); $('clearAuditBtn')?.addEventListener('click',()=>{if(!isAdmin())return; if(confirm('¿Deseas limpiar el historial de auditoría? Esta acción solo conserva el evento de limpieza.')){addAudit('Auditoría limpiada','Auditoría','El administrador limpió el historial'); write(DB.audit,read(DB.audit).slice(0,1)); renderAudit();}}); $('refreshUsersBtn')?.addEventListener('click',renderAll); $('clearFiltersBtn')?.addEventListener('click',()=>{['searchInput','topbarSearchInput','filterMunicipio','filterDistrict','filterSector','filterMesa','filterColegio','filterRole','filterRegistrar'].forEach(id=>{if($(id))$(id).value=''}); renderAll();}); $('exportBtn')?.addEventListener('click',exportExcel); $('cancelEditVoterBtn')?.addEventListener('click',resetVoterForm); $('forgotPasswordBtn')?.addEventListener('click',openForgotPasswordModal); $('closeForgotPasswordModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('closeForgotModalBtn')?.addEventListener('click',closeForgotPasswordModal); $('cancelForgotBtn')?.addEventListener('click',closeForgotPasswordModal); $('forgotPasswordModal')?.addEventListener('click',e=>{if(e.target===$('forgotPasswordModal'))closeForgotPasswordModal();}); $('forgotPasswordForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('forgotForm')?.addEventListener('submit',sendPasswordRecoveryRequest); $('resetForm')?.addEventListener('submit',changePasswordFromResetLink); $('closeResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('cancelResetModalBtn')?.addEventListener('click',closeResetPasswordModal); $('resetPasswordModal')?.addEventListener('click',e=>{if(e.target===$('resetPasswordModal'))closeResetPasswordModal();}); ['resetPassword','resetPasswordConfirm'].forEach(id=>$(id)?.addEventListener('input',updateResetPasswordUi)); document.querySelectorAll('[data-toggle-password]').forEach(btn=>btn.addEventListener('click',()=>{const input=$(btn.dataset.togglePassword); if(!input)return; const visible=input.type==='text'; input.type=visible?'password':'text'; btn.textContent=visible?'Mostrar':'Ocultar'; btn.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');})); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('resetPasswordModal')?.classList.contains('hidden'))closeResetPasswordModal();}); $('registerMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('registerDistrict'),e.target.value,'Seleccione')); $('editUserMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('editUserDistrict'),e.target.value,'Seleccione')); $('voterMunicipio')?.addEventListener('change',e=>fillDistrictSelect($('voterDistrict'),e.target.value,'Seleccione'));
 $('loginForm')?.addEventListener('submit',async e=>{e.preventDefault(); const id=clean($('loginUser').value).toLowerCase(); const pass=$('loginPassword').value; const user=read(DB.users).find(u=>u.username.toLowerCase()===id||u.email.toLowerCase()===id); if(!user){addAudit('Intento fallido de acceso','Sesión',`Usuario no encontrado: ${id}`,{name:id,role:'No autenticado',username:id}); return msg($('authMessage'),'Usuario no encontrado.','error');} if(user.status!=='Aprobado'){addAudit('Intento fallido de acceso','Sesión',`Usuario pendiente o no aprobado: ${id}`,user); return msg($('authMessage'),'Este usuario aún no ha sido aprobado.','error');} if(!await verifyPassword(pass,user.password_hash)){addAudit('Intento fallido de acceso','Sesión',`Contraseña incorrecta: ${id}`,user); return msg($('authMessage'),'Contraseña incorrecta.','error');} loginUser(user);});
 $('registerForm')?.addEventListener('submit',async e=>{e.preventDefault(); const users=read(DB.users); const first=users.length===0; const pass=$('registerPassword').value; const pass2=$('registerPasswordConfirm').value; if(pass!==pass2)return msg($('authMessage'),'Las contraseñas no coinciden.','error'); const username=clean($('registerUsername').value); const email=clean($('registerEmail').value); if(users.some(u=>u.username.toLowerCase()===username.toLowerCase()||u.email.toLowerCase()===email.toLowerCase()))return msg($('authMessage'),'Ya existe un usuario con ese usuario o correo.','error'); const recommender=users.find(u=>u.id===$('registerRecommendedBy')?.value); const user={id:uid(),name:clean($('registerName').value),username,email,phone:clean($('registerPhone').value),role:first?'Administrador':$('registerRole').value,province:PROVINCE,municipio:clean($('registerMunicipio').value),district:clean($('registerDistrict')?.value),zone:clean($('registerZone').value),recommended_by_id:first?'':(recommender?.id||''),recommended_by_name:first?'':(recommender?.name||''),recommended_by_role:first?'':(recommender?.role||''),status:first?'Aprobado':'Pendiente',password_hash:await hashPassword(pass),created_at:new Date().toISOString()}; users.push(user); write(DB.users,users); $('registerForm').reset(); initSelects(); addAudit(first?'Administrador creado':'Usuario solicitado','Usuarios',`${user.name} · ${user.role}`, first?user:null); msg($('authMessage'),first?'Administrador creado. Ya puedes iniciar sesión.':'Usuario creado. Debe ser aprobado por el administrador.','success'); showAuthTab('login');});
 $('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=read(DB.voters); const id=$('editingVoterId').value; const ced=clean($('voterCedula').value); const dup=voters.find(v=>v.cedula===ced&&v.id!==id); if(dup)return msg($('voterMessage'),`Esta cédula ya está registrada por ${dup.registered_by_name}.`,'error'); const item={name:clean($('voterName').value),cedula:ced,phone:clean($('voterPhone').value),age:clean($('voterAge').value),address:clean($('voterAddress').value),province:PROVINCE,municipio:clean($('voterMunicipio').value),district:clean($('voterDistrict')?.value),zone:clean($('voterZone').value),recinto:clean($('voterRecinto').value),colegio:clean($('voterColegio').value),observation:clean($('voterObservation').value)}; if(id){const i=voters.findIndex(v=>v.id===id); if(i>-1&&canEditVoter(voters[i]))voters[i]={...voters[i],...item,updated_at:new Date().toISOString()};} else voters.push({id:uid(),...item,registered_by_id:currentUser.id,registered_by_name:currentUser.name,registered_by_role:currentUser.role,created_at:new Date().toISOString()}); write(DB.voters,voters); addAudit(id?'Registro editado':'Registro agregado','Registros',`${item.name} · ${item.cedula}`); resetVoterForm(); renderAll(); msg($('voterMessage'),id?'Registro actualizado correctamente.':'Registro guardado correctamente.','success');});
@@ -743,5 +846,18 @@ function migrateData(){
   write(DB.voters,voters);
   if(!localStorage.getItem(DB.audit))write(DB.audit,[]);
 }
-function boot(){migrateData(); document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light'; initSelects(); bindEvents(); const sid=localStorage.getItem(DB.session); const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado'); if(user)loginUser(user); else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); unlockAuthScroll(); showAuthTab('login');} handleResetLink(); if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{}); window.addEventListener('resize',renderChart);}
+async function boot(){
+  await loadSupabaseData();
+  migrateData();
+  document.documentElement.dataset.theme=localStorage.getItem(DB.theme)||document.documentElement.dataset.theme||'light';
+  initSelects();
+  bindEvents();
+  const sid=localStorage.getItem(DB.session);
+  const user=read(DB.users).find(u=>u.id===sid&&u.status==='Aprobado');
+  if(user)loginUser(user);
+  else {$('dashboardSection')?.classList.add('hidden'); $('authSection')?.classList.remove('hidden'); unlockAuthScroll(); showAuthTab('login');}
+  handleResetLink();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  window.addEventListener('resize',renderChart);
+}
 document.addEventListener('DOMContentLoaded',boot);

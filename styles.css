@@ -6838,3 +6838,244 @@ body {
     z-index: 300 !important;
   }
 }
+
+
+/* === FIX JOSE 99: recuperación responsive + auditoría dark === */
+#resetPasswordModal .reset-modal-card{
+  width:min(460px, calc(100vw - 28px)) !important;
+  max-width:460px !important;
+}
+
+#resetPasswordModal .modal-header{
+  align-items:flex-start !important;
+  gap:12px !important;
+}
+
+#resetPasswordModal .modal-header h3{
+  line-height:1.15 !important;
+}
+
+#resetPasswordModal .modal-header p{
+  line-height:1.45 !important;
+}
+
+#resetPasswordModal .password-field{
+  width:100% !important;
+}
+
+#resetPasswordModal .password-field input{
+  width:100% !important;
+  min-width:0 !important;
+  padding-right:86px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+#resetPasswordModal .password-toggle-btn{
+  right:10px !important;
+  max-width:72px !important;
+  white-space:nowrap !important;
+  line-height:1 !important;
+  z-index:2 !important;
+}
+
+[data-theme="dark"] #auditActionFilter,
+html[data-theme="dark"] #auditActionFilter{
+  background:#0F172A !important;
+  color:#F8FAFC !important;
+  -webkit-text-fill-color:#F8FAFC !important;
+  border-color:rgba(107,143,138,.65) !important;
+}
+
+[data-theme="dark"] #auditActionFilter option,
+html[data-theme="dark"] #auditActionFilter option{
+  background:#0F172A !important;
+  color:#F8FAFC !important;
+  -webkit-text-fill-color:#F8FAFC !important;
+}
+
+@media(max-width:520px){
+  #resetPasswordModal{
+    padding:10px !important;
+    align-items:center !important;
+  }
+
+  #resetPasswordModal .reset-modal-card{
+    width:calc(100vw - 22px) !important;
+    max-width:calc(100vw - 22px) !important;
+    max-height:calc(100dvh - 22px) !important;
+    padding:20px 14px 16px !important;
+    border-radius:24px !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  #resetPasswordModal .modal-header{
+    display:grid !important;
+    grid-template-columns:1fr 48px !important;
+    gap:10px !important;
+  }
+
+  #resetPasswordModal .modal-header h3{
+    font-size:clamp(1.35rem, 6.3vw, 1.75rem) !important;
+    margin:0 0 6px !important;
+  }
+
+  #resetPasswordModal .modal-header p{
+    font-size:clamp(.95rem, 4.5vw, 1.08rem) !important;
+    margin:0 !important;
+  }
+
+  #resetPasswordModal .modal-close-btn{
+    width:46px !important;
+    height:46px !important;
+    min-width:46px !important;
+    min-height:46px !important;
+    font-size:1.55rem !important;
+  }
+
+  #resetPasswordModal .reset-account-box{
+    margin:14px 0 6px !important;
+    padding:12px 12px !important;
+    font-size:.92rem !important;
+    line-height:1.35 !important;
+  }
+
+  #resetPasswordModal #resetForm{
+    margin-top:12px !important;
+    gap:10px !important;
+  }
+
+  #resetPasswordModal .input-group{
+    gap:7px !important;
+  }
+
+  #resetPasswordModal .input-group label{
+    font-size:.95rem !important;
+    line-height:1.2 !important;
+  }
+
+  #resetPasswordModal .password-field input{
+    min-height:54px !important;
+    height:54px !important;
+    font-size:16px !important;
+    line-height:1.2 !important;
+    padding:13px 78px 13px 13px !important;
+    border-radius:18px !important;
+  }
+
+  #resetPasswordModal .password-field input::placeholder{
+    font-size:clamp(.88rem, 4.1vw, 1rem) !important;
+    line-height:1.2 !important;
+    opacity:.78 !important;
+  }
+
+  #resetPasswordModal .password-toggle-btn{
+    right:8px !important;
+    padding:8px 10px !important;
+    max-width:66px !important;
+    font-size:.72rem !important;
+    border-radius:999px !important;
+  }
+
+  #resetPasswordModal .password-strength{
+    gap:6px !important;
+    margin-top:8px !important;
+  }
+
+  #resetPasswordModal .reset-helper{
+    font-size:.82rem !important;
+    line-height:1.35 !important;
+  }
+
+  #resetPasswordModal .reset-actions{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+    margin-top:14px !important;
+  }
+
+  #resetPasswordModal .reset-actions .clear-btn,
+  #resetPasswordModal .reset-actions .primary-btn{
+    min-height:52px !important;
+    font-size:.98rem !important;
+    border-radius:18px !important;
+    padding:12px 14px !important;
+  }
+}
+
+@media(max-width:380px){
+  #resetPasswordModal .reset-modal-card{
+    padding:18px 12px 14px !important;
+  }
+
+  #resetPasswordModal .modal-header{
+    grid-template-columns:1fr 44px !important;
+  }
+
+  #resetPasswordModal .modal-close-btn{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    min-height:42px !important;
+  }
+
+  #resetPasswordModal .password-field input{
+    padding-right:72px !important;
+  }
+
+  #resetPasswordModal .password-toggle-btn{
+    max-width:60px !important;
+    padding:7px 8px !important;
+    font-size:.68rem !important;
+  }
+}
+
+
+/* Fix texto buscador modo oscuro */
+[data-theme="dark"] .topbar-search input{
+  color:#F9FAFB !important;
+}
+[data-theme="dark"] .topbar-search input::placeholder{
+  color:#F9FAFB !important;
+  opacity:1;
+}
+
+/* Corrección final: texto del buscador superior en modo oscuro */
+html[data-theme="dark"] #topbarSearchInput,
+html[data-theme="dark"] .topbar-search #topbarSearchInput,
+html[data-theme="dark"] .topbar-search input[type="search"]{
+  color:#F9FAFB !important;
+  -webkit-text-fill-color:#F9FAFB !important;
+  caret-color:#F9FAFB !important;
+}
+
+html[data-theme="dark"] #topbarSearchInput::placeholder,
+html[data-theme="dark"] .topbar-search #topbarSearchInput::placeholder,
+html[data-theme="dark"] .topbar-search input[type="search"]::placeholder{
+  color:#F9FAFB !important;
+  -webkit-text-fill-color:#F9FAFB !important;
+  opacity:1 !important;
+}
+
+
+/* === FIX JOSE 104: scroll con rueda del mouse en dashboard desktop === */
+@media (min-width: 769px){
+  body:not(.auth-active) #dashboardSection:not(.hidden){
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .app-main{
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+    overscroll-behavior-y: auto !important;
+  }
+
+  body:not(.auth-active) #dashboardSection:not(.hidden) .app-content{
+    overflow: visible !important;
+  }
+}
