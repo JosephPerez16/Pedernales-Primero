@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pedernales-primero-v127-user-remote-source';
+const CACHE_NAME = 'pedernales-primero-v128-supabase-users-source';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=126-safe-delete',
-  './script.js?v=126-safe-delete',
+  './styles.css?v=128-supabase-users-source',
+  './script.js?v=128-supabase-users-source',
   './manifest.json',
   './pwa.js',
   './Logos/logo-pedernales.png',
@@ -56,7 +56,7 @@ self.addEventListener('fetch', function (event) {
     url.pathname.endsWith('/index.html') ||
     url.pathname.endsWith('/script.js') ||
     url.pathname.endsWith('/styles.css') ||
-    url.search.includes('v=126-safe-delete');
+    url.search.includes('v=128-supabase-users-source');
 
   if (isFreshFile) {
     event.respondWith(

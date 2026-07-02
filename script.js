@@ -200,18 +200,6 @@ async function loadSupabaseTable(key){
   const local = read(key);
   const remoteRows = normalizeSupabaseRows(key, Array.isArray(remote) ? remote : []);
 
-  // SEGURIDAD CRÍTICA:
-  // La tabla de usuarios siempre se toma desde Supabase como fuente oficial.
-  // Nunca se mezclan usuarios antiguos del navegador/PWA con pp_users,
-  // porque eso fue lo que permitía que un usuario eliminado reapareciera.
-  if(key === DB.users){
-    const cleanRemoteUsers = remoteRows
-      .filter(row => row && row.id)
-      .sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
-    writeLocal(key, cleanRemoteUsers);
-    return;
-  }
-
   if(key === DB.audit){
     const mergedMap = new Map();
     [...local, ...remoteRows].forEach(row => {
@@ -222,6 +210,14 @@ async function loadSupabaseTable(key){
     const remoteIds = new Set(remoteRows.map(row => String(row.id)));
     const pending = merged.filter(row => row && row.id && !remoteIds.has(String(row.id)));
     if(pending.length) await syncSupabaseTable(key, pending);
+    return;
+  }
+
+  if(key === DB.users){
+    // Supabase es la fuente oficial de usuarios.
+    // No mezclar ni reenviar usuarios guardados en localStorage, porque eso puede revivir usuarios eliminados.
+    const users = remoteRows.sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
+    writeLocal(key, users);
     return;
   }
 
@@ -972,14 +968,13 @@ $('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=r
 $('userEditForm')?.addEventListener('submit',e=>{e.preventDefault(); if(!isAdmin())return; const id=$('editUserId').value; const users=read(DB.users).map(u=>u.id===id?{...u,name:clean($('editUserName').value),username:clean($('editUserUsername').value),email:clean($('editUserEmail').value),phone:clean($('editUserPhone').value),role:$('editUserRole').value,province:PROVINCE,municipio:clean($('editUserMunicipio').value),district:clean($('editUserDistrict')?.value),zone:clean($('editUserZone').value),recommended_by_id:$('editUserRecommendedBy')?.value||'',recommended_by_name:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.name||'',recommended_by_role:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.role||''}:u); write(DB.users,users); addAudit('Usuario editado','Usuarios',`${clean($('editUserName').value)} · ${$('editUserRole').value}`); closeUserModal(); renderAll();}); $('closeUserEditModalBtn')?.addEventListener('click',closeUserModal); $('cancelUserEditBtn')?.addEventListener('click',closeUserModal);
 document.body.addEventListener('click',async e=>{const t=e.target; if(t.dataset.editVoter)editVoter(t.dataset.editVoter); if(t.dataset.deleteVoter)deleteVoter(t.dataset.deleteVoter); if(t.dataset.approveUser&&isAdmin()){const au=read(DB.users).find(u=>u.id===t.dataset.approveUser); write(DB.users,read(DB.users).map(u=>u.id===t.dataset.approveUser?{...u,status:'Aprobado'}:u)); addAudit('Usuario aprobado','Usuarios',`${au?.name||'Usuario'} · ${au?.role||''}`); renderAll();} if(t.dataset.editUser)openUserModal(t.dataset.editUser); if(t.dataset.deleteUser&&isAdmin()){const deleteId=t.dataset.deleteUser; const du=read(DB.users).find(u=>u.id===deleteId); if(!du)return; if(currentUser?.id===deleteId){alert('No puedes eliminar tu propio usuario mientras estás dentro del sistema.'); return;} const votersLinked=read(DB.voters).filter(v=>v.registered_by_id===deleteId).length; const message=votersLinked?`Este usuario tiene ${votersLinked} votante(s) registrados. Se eliminará el usuario, pero los votantes conservarán el historial de nombre/rol. ¿Deseas continuar?`:`¿Deseas eliminar definitivamente este usuario?`; if(confirm(message)&&confirm('Confirmación final: esta acción eliminará el usuario de Supabase y del sistema.')){const users=read(DB.users).filter(u=>u.id!==deleteId); writeLocal(DB.users,users); const remoteDeleted=await deleteSupabaseRow(DB.users,deleteId,{explicitAdminDelete:true}); addAudit('Usuario eliminado','Usuarios',`${du.name||'Usuario'} · ${du.role||''} · ID: ${deleteId}${remoteDeleted?'':' · eliminación remota pendiente/no confirmada'}`); renderAll();}}});}
 function migrateData(){
+  // Los usuarios no se migran desde localStorage. Supabase manda.
+  // Esto evita que un navegador/PWA viejo vuelva a insertar usuarios eliminados.
   const users=read(DB.users).map(u=>({...u,district:u.district||u.municipio||'',recommended_by_id:u.recommended_by_id||'',recommended_by_name:u.recommended_by_name||'',recommended_by_role:u.recommended_by_role||''}));
-  const voters=read(DB.voters).map(v=>({...v,district:v.district||v.municipio||''}));
-
-  // Migración local no debe sincronizar usuarios antiguos automáticamente.
-  // Los cambios reales de usuarios se guardan únicamente desde registro, edición o eliminación administrativa.
   writeLocal(DB.users,users);
-  writeLocal(DB.voters,voters);
-  if(!localStorage.getItem(DB.audit))writeLocal(DB.audit,[]);
+  const voters=read(DB.voters).map(v=>({...v,district:v.district||v.municipio||''}));
+  write(DB.voters,voters);
+  if(!localStorage.getItem(DB.audit))write(DB.audit,[]);
 }
 async function boot(){
   await loadSupabaseData();
