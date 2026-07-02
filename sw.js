@@ -1,9 +1,9 @@
-const CACHE_NAME = 'pedernales-primero-v117-registro-dark-final';
+const CACHE_NAME = 'pedernales-primero-v126-safe-delete';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=113-merge-final',
-  './script.js?v=113-merge-final',
+  './styles.css?v=126-safe-delete',
+  './script.js?v=126-safe-delete',
   './manifest.json',
   './pwa.js',
   './Logos/logo-pedernales.png',
@@ -56,7 +56,7 @@ self.addEventListener('fetch', function (event) {
     url.pathname.endsWith('/index.html') ||
     url.pathname.endsWith('/script.js') ||
     url.pathname.endsWith('/styles.css') ||
-    url.search.includes('v=112-audit-final');
+    url.search.includes('v=126-safe-delete');
 
   if (isFreshFile) {
     event.respondWith(

@@ -132,6 +132,9 @@ async function syncSupabaseTable(key, rows){
   try{
     const prepared = prepareSupabaseRows(key, rows);
 
+    // Sincronización segura: solo inserta/actualiza.
+    // Nunca elimina filas remotas por diferencias con el localStorage del navegador.
+    // Esto evita que un dispositivo con datos locales incompletos borre usuarios o votantes de Supabase.
     if(prepared.length){
       for(const row of prepared){
         if(key === DB.audit){
@@ -150,21 +153,29 @@ async function syncSupabaseTable(key, rows){
           });
         }
       }
-
-      if(key !== DB.audit){
-        const ids = prepared.map(x => String(x.id)).filter(Boolean);
-        if(ids.length){
-          const safeIds = ids.map(id => `"${encodeURIComponent(id)}"`).join(',');
-          await supabaseRequest(table, { method: 'DELETE', query: `?id=not.in.(${safeIds})` });
-        }
-      }
-    }else if(key !== DB.audit){
-      await supabaseRequest(table, { method: 'DELETE', query: '?id=not.is.null' });
     }
   }catch(error){
     console.error('Error sincronizando Supabase:', error);
   }
 }
+async function deleteSupabaseRow(key, id, options = {}){
+  const table = SUPABASE_TABLES[key];
+  if(!table || !supabaseReady || !id) return false;
+
+  if(key === DB.users && options.explicitAdminDelete !== true){
+    console.warn('Borrado remoto de usuarios bloqueado: falta confirmación administrativa explícita.', id);
+    return false;
+  }
+
+  try{
+    await supabaseRequest(table, { method: 'DELETE', query: `?id=eq.${encodeURIComponent(id)}` });
+    return true;
+  }catch(error){
+    console.error('Error eliminando fila en Supabase:', error);
+    return false;
+  }
+}
+
 
 async function insertSupabaseAudit(row){
   if(!supabaseReady) return;
@@ -202,24 +213,35 @@ async function loadSupabaseTable(key){
     return;
   }
 
-  if(remoteRows.length){
-    writeLocal(key, remoteRows);
-  }else if(local.length){
-    await syncSupabaseTable(key, local);
-  }else{
-    writeLocal(key, []);
-  }
+  const mergedMap = new Map();
+  local.forEach(row => {
+    if(row && row.id) mergedMap.set(String(row.id), row);
+  });
+  remoteRows.forEach(row => {
+    if(row && row.id) mergedMap.set(String(row.id), row);
+  });
+  const merged = Array.from(mergedMap.values()).sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
+  writeLocal(key, merged);
+
+  const remoteIds = new Set(remoteRows.map(row => String(row.id)));
+  const pendingLocalRows = merged.filter(row => row && row.id && !remoteIds.has(String(row.id)));
+  if(pendingLocalRows.length) await syncSupabaseTable(key, pendingLocalRows);
 }
 async function loadSupabaseData(){
+  supabaseSyncing = true;
+  supabaseReady = false;
+  const results = [];
   try{
-    supabaseSyncing = true;
-    await loadSupabaseTable(DB.users);
-    await loadSupabaseTable(DB.voters);
-    await loadSupabaseTable(DB.audit);
-    supabaseReady = true;
-  }catch(error){
-    console.error('No se pudo cargar Supabase. Se usará respaldo local:', error);
-    supabaseReady = false;
+    for(const key of [DB.users, DB.voters, DB.audit]){
+      try{
+        await loadSupabaseTable(key);
+        results.push({key, ok:true});
+      }catch(error){
+        results.push({key, ok:false});
+        console.error(`No se pudo cargar ${SUPABASE_TABLES[key] || key}:`, error);
+      }
+    }
+    supabaseReady = results.some(r => r.ok);
   }finally{
     supabaseSyncing = false;
   }
@@ -718,7 +740,7 @@ function renderUsersTable(){
   const users=filteredUsersList();
   $('usersTotalBadge')&&($('usersTotalBadge').textContent=`${all.length} ${all.length===1?'usuario':'usuarios'}`);
   $('usersApprovedBadge')&&($('usersApprovedBadge').textContent=`${all.filter(u=>u.status==='Aprobado').length} aprobados`);
-  const rows=users.length?users.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.email)}</td><td><span class="badge">${escapeHtml(u.role)}</span></td><td>${escapeHtml(u.phone)}</td><td>${escapeHtml(u.municipio||'')}</td><td>${escapeHtml(u.district||u.municipio||'')}</td><td>${escapeHtml(u.zone||'')}</td><td>${escapeHtml(u.recommended_by_name||'')}</td><td><span class="badge ${u.status==='Aprobado'?'status-ok':'status-pending'}">${escapeHtml(u.status)}</span></td><td>${isAdmin()?`<div class="row-actions">${u.status!=='Aprobado'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Eliminar</button>`:''}</div>`:''}</td></tr>`).join(''):`<tr><td colspan="11" class="empty-cell">No hay usuarios disponibles.</td></tr>`;
+  const rows=users.length?users.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.email)}</td><td><span class="badge">${escapeHtml(u.role)}</span></td><td>${escapeHtml(u.phone)}</td><td>${escapeHtml(u.municipio||'')}</td><td>${escapeHtml(u.district||u.municipio||'')}</td><td>${escapeHtml(u.zone||'')}</td><td>${escapeHtml(u.recommended_by_name||'')}</td><td><span class="badge ${u.status==='Aprobado'?'status-ok':'status-pending'}">${escapeHtml(u.status)}</span></td><td>${isAdmin()?`<div class="row-actions">${u.status==='Pendiente'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id&&u.status!=='Inactivo'?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Desactivar</button>`:''}</div>`:''}</td></tr>`).join(''):`<tr><td colspan="11" class="empty-cell">No hay usuarios disponibles.</td></tr>`;
   tbody.innerHTML=rows;
 
   const wrap=tbody.closest('.table-wrap');
@@ -742,14 +764,14 @@ function renderUsersTable(){
           <p><small>Teléfono</small>${escapeHtml(u.phone||'—')}</p>
           <p><small>Municipio</small>${escapeHtml(u.municipio||'—')}</p>
         </div>
-        ${isAdmin()?`<div class="row-actions user-mobile-actions">${u.status!=='Aprobado'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Eliminar</button>`:''}</div>`:''}
+        ${isAdmin()?`<div class="row-actions user-mobile-actions">${u.status==='Pendiente'?`<button class="mini-btn" data-approve-user="${u.id}">Aprobar</button>`:''}<button class="mini-btn" data-edit-user="${u.id}">Editar</button>${u.id!==currentUser?.id&&u.status!=='Inactivo'?`<button class="mini-btn danger-mini" data-delete-user="${u.id}">Desactivar</button>`:''}</div>`:''}
       </article>`).join(''):`<div class="empty-cell users-mobile-empty">No hay usuarios disponibles.</div>`;
   }
 }
 function renderAll(){updateDynamicFilters(); renderStats(); renderChart(); renderRanking(); renderSearchCards(); renderVotersTable(); renderUsersTable(); renderAudit();}
 function resetVoterForm(){if(!$('voterForm'))return; $('voterForm').reset(); $('editingVoterId').value=''; $('voterFormTitle').textContent='Registrar votante / simpatizante'; $('saveVoterBtn').lastChild.textContent=' Guardar registro'; $('cancelEditVoterBtn')?.classList.add('hidden'); if($('voterZone')){$('voterZone').readOnly=false;} if($('voterMunicipio')){$('voterMunicipio').disabled=false;} if($('voterDistrict')){$('voterDistrict').disabled=false;} fillSelect($('voterMunicipio'),MUNICIPIOS,'Seleccione'); fillDistrictSelect($('voterDistrict'),$('voterMunicipio')?.value,''); if(isZone()&&currentUser.zone){$('voterZone').value=currentUser.zone; $('voterZone').readOnly=true;} if(isZone()&&currentUser.municipio){$('voterMunicipio').value=currentUser.municipio; fillDistrictSelect($('voterDistrict'),currentUser.municipio,'Seleccione');} if(isZone()&&currentUser.district){$('voterDistrict').value=currentUser.district;} }
 function editVoter(id){const v=read(DB.voters).find(x=>x.id===id); if(!v||!canEditVoter(v))return; $('editingVoterId').value=v.id; $('voterName').value=v.name; $('voterCedula').value=v.cedula; $('voterPhone').value=v.phone; $('voterAge').value=v.age; $('voterAddress').value=v.address; $('voterMunicipio').value=v.municipio; fillDistrictSelect($('voterDistrict'),v.municipio,'Seleccione'); $('voterDistrict').value=v.district||v.municipio||''; $('voterZone').value=v.zone; $('voterRecinto').value=v.recinto; $('voterColegio').value=v.colegio; $('voterObservation').value=v.observation||''; $('voterFormTitle').textContent='Editar registro'; $('saveVoterBtn').lastChild.textContent=' Actualizar registro'; $('cancelEditVoterBtn')?.classList.remove('hidden'); setPanel('registro'); window.scrollTo({top:0,behavior:'smooth'});}
-function deleteVoter(id){const voters=read(DB.voters); const v=voters.find(x=>x.id===id); if(!v||!canEditVoter(v))return; if(!confirm('¿Deseas eliminar este registro?'))return; write(DB.voters,voters.filter(x=>x.id!==id)); addAudit('Registro eliminado','Registros',`${v.name||'Sin nombre'} · ${v.cedula||''}`); renderAll();}
+function deleteVoter(id){const voters=read(DB.voters); const v=voters.find(x=>x.id===id); if(!v||!canEditVoter(v))return; if(!confirm('¿Deseas eliminar este registro?'))return; write(DB.voters,voters.filter(x=>x.id!==id)); deleteSupabaseRow(DB.voters,id); addAudit('Registro eliminado','Registros',`${v.name||'Sin nombre'} · ${v.cedula||''}`); renderAll();}
 function openUserModal(id){const u=read(DB.users).find(x=>x.id===id); if(!u||!isAdmin())return; $('editUserId').value=u.id; $('editUserName').value=u.name; $('editUserUsername').value=u.username; $('editUserEmail').value=u.email; $('editUserPhone').value=u.phone; $('editUserRole').value=u.role; $('editUserMunicipio').value=u.municipio||''; fillDistrictSelect($('editUserDistrict'),u.municipio||'','Seleccione'); $('editUserDistrict').value=u.district||u.municipio||''; $('editUserZone').value=u.zone||''; fillRecommendedSelect($('editUserRecommendedBy'),u.recommended_by_id||''); $('userEditModal').classList.remove('hidden');}
 function closeUserModal(){ $('userEditModal')?.classList.add('hidden'); }
 function exportExcel(){
@@ -936,7 +958,7 @@ $('loginForm')?.addEventListener('submit',async e=>{e.preventDefault(); const id
 $('registerForm')?.addEventListener('submit',async e=>{e.preventDefault(); const users=read(DB.users); const first=users.length===0; const pass=$('registerPassword').value; const pass2=$('registerPasswordConfirm').value; if(pass!==pass2)return msg($('authMessage'),'Las contraseñas no coinciden.','error'); const username=clean($('registerUsername').value); const email=clean($('registerEmail').value); if(users.some(u=>u.username.toLowerCase()===username.toLowerCase()||u.email.toLowerCase()===email.toLowerCase()))return msg($('authMessage'),'Ya existe un usuario con ese usuario o correo.','error'); const recommender=users.find(u=>u.id===$('registerRecommendedBy')?.value); const user={id:uid(),name:clean($('registerName').value),username,email,phone:clean($('registerPhone').value),role:first?'Administrador':$('registerRole').value,province:PROVINCE,municipio:clean($('registerMunicipio').value),district:clean($('registerDistrict')?.value),zone:clean($('registerZone').value),recommended_by_id:first?'':(recommender?.id||''),recommended_by_name:first?'':(recommender?.name||''),recommended_by_role:first?'':(recommender?.role||''),status:first?'Aprobado':'Pendiente',password_hash:await hashPassword(pass),created_at:new Date().toISOString()}; users.push(user); write(DB.users,users); $('registerForm').reset(); initSelects(); addAudit(first?'Administrador creado':'Usuario solicitado','Usuarios',`${user.name} · ${user.role}`, first?user:null); msg($('authMessage'),first?'Administrador creado. Ya puedes iniciar sesión.':'Usuario creado. Debe ser aprobado por el administrador.','success'); showAuthTab('login');});
 $('voterForm')?.addEventListener('submit',e=>{e.preventDefault(); const voters=read(DB.voters); const id=$('editingVoterId').value; const ced=clean($('voterCedula').value); const dup=voters.find(v=>v.cedula===ced&&v.id!==id); if(dup)return msg($('voterMessage'),`Esta cédula ya está registrada por ${dup.registered_by_name}.`,'error'); const item={name:clean($('voterName').value),cedula:ced,phone:clean($('voterPhone').value),age:clean($('voterAge').value),address:clean($('voterAddress').value),province:PROVINCE,municipio:clean($('voterMunicipio').value),district:clean($('voterDistrict')?.value),zone:clean($('voterZone').value),recinto:clean($('voterRecinto').value),colegio:clean($('voterColegio').value),observation:clean($('voterObservation').value)}; if(id){const i=voters.findIndex(v=>v.id===id); if(i>-1&&canEditVoter(voters[i]))voters[i]={...voters[i],...item,updated_at:new Date().toISOString()};} else voters.push({id:uid(),...item,registered_by_id:currentUser.id,registered_by_name:currentUser.name,registered_by_role:currentUser.role,created_at:new Date().toISOString()}); write(DB.voters,voters); addAudit(id?'Registro editado':'Registro agregado','Registros',`${item.name} · ${item.cedula}`); resetVoterForm(); renderAll(); msg($('voterMessage'),id?'Registro actualizado correctamente.':'Registro guardado correctamente.','success');});
 $('userEditForm')?.addEventListener('submit',e=>{e.preventDefault(); if(!isAdmin())return; const id=$('editUserId').value; const users=read(DB.users).map(u=>u.id===id?{...u,name:clean($('editUserName').value),username:clean($('editUserUsername').value),email:clean($('editUserEmail').value),phone:clean($('editUserPhone').value),role:$('editUserRole').value,province:PROVINCE,municipio:clean($('editUserMunicipio').value),district:clean($('editUserDistrict')?.value),zone:clean($('editUserZone').value),recommended_by_id:$('editUserRecommendedBy')?.value||'',recommended_by_name:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.name||'',recommended_by_role:approvedUsers().find(x=>x.id===$('editUserRecommendedBy')?.value)?.role||''}:u); write(DB.users,users); addAudit('Usuario editado','Usuarios',`${clean($('editUserName').value)} · ${$('editUserRole').value}`); closeUserModal(); renderAll();}); $('closeUserEditModalBtn')?.addEventListener('click',closeUserModal); $('cancelUserEditBtn')?.addEventListener('click',closeUserModal);
-document.body.addEventListener('click',e=>{const t=e.target; if(t.dataset.editVoter)editVoter(t.dataset.editVoter); if(t.dataset.deleteVoter)deleteVoter(t.dataset.deleteVoter); if(t.dataset.approveUser&&isAdmin()){const au=read(DB.users).find(u=>u.id===t.dataset.approveUser); write(DB.users,read(DB.users).map(u=>u.id===t.dataset.approveUser?{...u,status:'Aprobado'}:u)); addAudit('Usuario aprobado','Usuarios',`${au?.name||'Usuario'} · ${au?.role||''}`); renderAll();} if(t.dataset.editUser)openUserModal(t.dataset.editUser); if(t.dataset.deleteUser&&isAdmin()){if(confirm('¿Deseas eliminar este usuario?')){const du=read(DB.users).find(u=>u.id===t.dataset.deleteUser); write(DB.users,read(DB.users).filter(u=>u.id!==t.dataset.deleteUser)); addAudit('Usuario eliminado','Usuarios',`${du?.name||'Usuario'} · ${du?.role||''}`); renderAll();}}});}
+document.body.addEventListener('click',async e=>{const t=e.target; if(t.dataset.editVoter)editVoter(t.dataset.editVoter); if(t.dataset.deleteVoter)deleteVoter(t.dataset.deleteVoter); if(t.dataset.approveUser&&isAdmin()){const au=read(DB.users).find(u=>u.id===t.dataset.approveUser); write(DB.users,read(DB.users).map(u=>u.id===t.dataset.approveUser?{...u,status:'Aprobado'}:u)); addAudit('Usuario aprobado','Usuarios',`${au?.name||'Usuario'} · ${au?.role||''}`); renderAll();} if(t.dataset.editUser)openUserModal(t.dataset.editUser); if(t.dataset.deleteUser&&isAdmin()){const deleteId=t.dataset.deleteUser; const du=read(DB.users).find(u=>u.id===deleteId); if(!du)return; if(currentUser?.id===deleteId){alert('No puedes eliminar tu propio usuario mientras estás dentro del sistema.'); return;} const votersLinked=read(DB.voters).filter(v=>v.registered_by_id===deleteId).length; const message=votersLinked?`Este usuario tiene ${votersLinked} votante(s) registrados. Se eliminará el usuario, pero los votantes conservarán el historial de nombre/rol. ¿Deseas continuar?`:`¿Deseas eliminar definitivamente este usuario?`; if(confirm(message)&&confirm('Confirmación final: esta acción eliminará el usuario de Supabase y del sistema.')){const users=read(DB.users).filter(u=>u.id!==deleteId); writeLocal(DB.users,users); const remoteDeleted=await deleteSupabaseRow(DB.users,deleteId,{explicitAdminDelete:true}); addAudit('Usuario eliminado','Usuarios',`${du.name||'Usuario'} · ${du.role||''} · ID: ${deleteId}${remoteDeleted?'':' · eliminación remota pendiente/no confirmada'}`); renderAll();}}});}
 function migrateData(){
   const users=read(DB.users).map(u=>({...u,district:u.district||u.municipio||'',recommended_by_id:u.recommended_by_id||'',recommended_by_name:u.recommended_by_name||'',recommended_by_role:u.recommended_by_role||''}));
   const voters=read(DB.voters).map(v=>({...v,district:v.district||v.municipio||''}));
