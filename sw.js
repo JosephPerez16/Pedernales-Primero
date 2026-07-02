@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedernales-primero-v126-safe-delete';
+const CACHE_NAME = 'pedernales-primero-v127-user-remote-source';
 const APP_SHELL = [
   './',
   './index.html',

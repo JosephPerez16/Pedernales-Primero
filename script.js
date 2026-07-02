@@ -200,6 +200,18 @@ async function loadSupabaseTable(key){
   const local = read(key);
   const remoteRows = normalizeSupabaseRows(key, Array.isArray(remote) ? remote : []);
 
+  // SEGURIDAD CRÍTICA:
+  // La tabla de usuarios siempre se toma desde Supabase como fuente oficial.
+  // Nunca se mezclan usuarios antiguos del navegador/PWA con pp_users,
+  // porque eso fue lo que permitía que un usuario eliminado reapareciera.
+  if(key === DB.users){
+    const cleanRemoteUsers = remoteRows
+      .filter(row => row && row.id)
+      .sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
+    writeLocal(key, cleanRemoteUsers);
+    return;
+  }
+
   if(key === DB.audit){
     const mergedMap = new Map();
     [...local, ...remoteRows].forEach(row => {
@@ -962,9 +974,12 @@ document.body.addEventListener('click',async e=>{const t=e.target; if(t.dataset.
 function migrateData(){
   const users=read(DB.users).map(u=>({...u,district:u.district||u.municipio||'',recommended_by_id:u.recommended_by_id||'',recommended_by_name:u.recommended_by_name||'',recommended_by_role:u.recommended_by_role||''}));
   const voters=read(DB.voters).map(v=>({...v,district:v.district||v.municipio||''}));
-  write(DB.users,users);
-  write(DB.voters,voters);
-  if(!localStorage.getItem(DB.audit))write(DB.audit,[]);
+
+  // Migración local no debe sincronizar usuarios antiguos automáticamente.
+  // Los cambios reales de usuarios se guardan únicamente desde registro, edición o eliminación administrativa.
+  writeLocal(DB.users,users);
+  writeLocal(DB.voters,voters);
+  if(!localStorage.getItem(DB.audit))writeLocal(DB.audit,[]);
 }
 async function boot(){
   await loadSupabaseData();
