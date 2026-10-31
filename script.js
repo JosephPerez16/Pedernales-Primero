@@ -12,10 +12,10 @@ const DEMARCACIONES = ['Pedernales','José Francisco Peña Gómez','Oviedo','Jua
 const PROVINCE = 'Pedernales';
 
 const EMAILJS_CONFIG = {
-  serviceId: 'service_qe268hf',
-  templateId: 'template_2alexku',
-  publicKey: 'SiS_aT7fhjvtowkbA',
-  adminEmail: 'pedernalesprimero@hotmail.com',
+  serviceId: 'service_rik3wlg',
+  templateId: 'template_dai52rs',
+  publicKey: 'BrHfkDY5Sp2xv4pVo',
+  adminEmail: 'pedernalesprimero@outlook.com',
   appUrl: 'https://josephperez16.github.io/Pedernales-Primero/'
 };
 
